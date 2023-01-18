@@ -25,9 +25,20 @@
                     for (const landmarks of results.multiHandLandmarks) {
                         //console.log(landmarks);
                         console.log(landmarks[8]);
+                        let indexTipPos = landmarks[8];
                         
                         let midiout = WebMidi.outputs[1];
-                        midiout.channels[1].playNote("C5");
+                        let note = getRadialNote(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height,
+                                                canvasElement.width/2, canvasElement.height/2,
+                                                300, scaleCmaj7);
+                        midiout.channels[1].playNote(note);
+                        canvasCtx.beginPath();
+                        canvasCtx.arc(canvasElement.width/2, canvasElement.height/2, 300, 0, 2 * Math.PI, false);
+                        canvasCtx.arc(canvasElement.width/2, canvasElement.height/2, 100, 0, 2 * Math.PI, false);
+                        canvasCtx.lineWidth = 3;
+                        canvasCtx.strokeStyle = '#ffffff';
+                        canvasCtx.stroke();
+
                         //console.log(midiout);
                         //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
                         //               {color: '#00FF00', lineWidth: 5});
@@ -69,15 +80,16 @@
             // Function triggered when WEBMIDI.js is ready
             function onEnabled() {
                 // Display available MIDI input devices
-                if (WebMidi.inputs.length < 1) {
-                console.log("No device detected.");
-                } else {
-                WebMidi.inputs.forEach((device, index) => {
-                    console.log(`${index}: ${device.name}`);
-                });
-                }
+                // if (WebMidi.inputs.length < 1) {
+                // console.log("No device detected.");
+                // } else {
+                // WebMidi.inputs.forEach((device, index) => {
+                //     console.log(`${index}: ${device.name}`);
+                // });
+                // }
                 
                 // Display available MIDI output devices
+                console.log("availiable outputs")
                 if (WebMidi.outputs.length < 1) {
                 console.log("No device detected.");
                 } else {
@@ -105,7 +117,7 @@
 
                 // 30% of the radius in center is a safe area
                 if (distance > radius*0.3) {
-                    let radialPercent = (radians + PI) / (2 * PI);
+                    let radialPercent = (radians + Math.PI) / (2 * Math.PI);
                     let note = scale[(Math.floor(radialPercent * 9)) % 8];
                     return note;
                 } else {
