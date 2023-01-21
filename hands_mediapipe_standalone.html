@@ -7,6 +7,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
+        <script src="midi.js"></script>
         <script type="module">
             const videoElement = document.getElementsByClassName('input_video')[0];
             const canvasElement = document.getElementsByClassName('output_canvas')[0];
@@ -24,9 +25,20 @@
                 if (results.multiHandLandmarks) {
                     for (const landmarks of results.multiHandLandmarks) {
                         //console.log(landmarks);
-                        console.log(landmarks[8]);
+                        // console.log(landmarks[8]);
                         let indexTipPos = landmarks[8];
+
+                        let v = getPointVelocity(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height);
+                        // console.log(v);
+                        if(v.vx > 200){
+                            console.log("swiped left");
+                        }
+                        else if(v.vx < -200){
+                            console.log("swiped right");
+                        }
+
                         
+                        // play a midi note
                         let midiout = WebMidi.outputs[1];
                         let note = getRadialNote(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height,
                                                 canvasElement.width/2, canvasElement.height/2,
@@ -69,61 +81,7 @@
             camera.start();
 
 
-            // ----- midi stuff -----
-            // https://webmidijs.org/
-            // Enable WEBMIDI.js and trigger the onEnabled() function when ready
-            WebMidi
-                .enable()
-                .then(onEnabled)
-                .catch(err => alert(err));
-
-            // Function triggered when WEBMIDI.js is ready
-            function onEnabled() {
-                // Display available MIDI input devices
-                // if (WebMidi.inputs.length < 1) {
-                // console.log("No device detected.");
-                // } else {
-                // WebMidi.inputs.forEach((device, index) => {
-                //     console.log(`${index}: ${device.name}`);
-                // });
-                // }
-                
-                // Display available MIDI output devices
-                console.log("availiable outputs")
-                if (WebMidi.outputs.length < 1) {
-                console.log("No device detected.");
-                } else {
-                WebMidi.outputs.forEach((device, index) => {
-                    console.log(`${index}: ${device.name}`);
-                });
-                }
-
-                
-            }
-
-            function getDistance(x1, y1, x2, y2) {
-                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-            }
-
-            // Calculate the note on the scale at (x,y) 
-            // centered around (cx,cy) in the circle with radius
-            // These are all arguments so we can change radial note params on the fly
-            const scaleCmaj7 = [60, 62, 64, 65, 67, 69, 71, 72];
-            function getRadialNote(x, y, cx, cy, radius, scale) {
-                let noteX = x - cx;
-                let noteY = y - cy;
-                let radians = Math.atan2(noteY, noteX);
-                let distance = getDistance(0, 0, noteX, noteY);
-
-                // 30% of the radius in center is a safe area
-                if (distance > radius*0.3) {
-                    let radialPercent = (radians + Math.PI) / (2 * Math.PI);
-                    let note = scale[(Math.floor(radialPercent * 9)) % 8];
-                    return note;
-                } else {
-                    return 0;
-                }
-            }
+            
         </script>
     </head>
 
