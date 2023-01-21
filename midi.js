@@ -65,7 +65,7 @@ let prevTimestamp = null;
 let prevX;
 let prevY;
 function getPointVelocity(currX, currY) {
-    let velocity = { vx: 0, vy: 0 };
+    let info = { vx: 0, vy: 0, distanceTraveled: 0 };
     if (prevTimestamp == null) {
         prevTimestamp = Date.now();
         prevX = currX;
@@ -76,12 +76,13 @@ function getPointVelocity(currX, currY) {
     let dx = currX - prevX;
     let dy = currY - prevY;
 
-    velocity.vx = Math.round(dx / dt * 100);
-    velocity.vy = Math.round(dy / dt * 100);
+    info.vx = Math.round(dx / dt * 100);
+    info.vy = Math.round(dy / dt * 100);
+    info.distanceTraveled = getDistance(currX, currY, prevX, prevY);
 
     prevTimestamp = Date.now();
     prevX = currX;
     prevY = currY;
 
-    return velocity;
+    return info;
 }

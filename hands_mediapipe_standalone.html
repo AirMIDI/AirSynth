@@ -30,10 +30,10 @@
 
                         let v = getPointVelocity(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height);
                         // console.log(v);
-                        if(v.vx > 200){
+                        if(v.vx > 150 && v.distanceTraveled > 150){
                             console.log("swiped left");
                         }
-                        else if(v.vx < -200){
+                        else if(v.vx < -150 && v.distanceTraveled > 150){
                             console.log("swiped right");
                         }
 
