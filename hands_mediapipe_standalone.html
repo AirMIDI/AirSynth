@@ -39,7 +39,8 @@
 
                         
                         // play a midi note
-                        let midiout = WebMidi.outputs[1];
+                        let selectedPort = document.getElementById("outputs").value;
+                        let midiout = WebMidi.outputs[selectedPort];
                         let note = getRadialNote(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height,
                                                 canvasElement.width/2, canvasElement.height/2,
                                                 300, scaleCmaj7);
@@ -86,6 +87,11 @@
     </head>
 
     <body>
+        <div>
+            <label for="outputs">MIDI port output</label>
+            <select name="outputs" id="outputs">
+            </select>
+        </div>
         <div class="container">
             <video class="input_video"></video>
             <canvas class="output_canvas" width="1280px" height="720px"></canvas>

@@ -18,12 +18,18 @@ function onEnabled() {
     // }
 
     // Display available MIDI output devices
-    console.log("availiable outputs")
+    // and add to html dropdown
+    let dropdownElem = document.getElementById("outputs");
+    console.log("availiable outputs");
     if (WebMidi.outputs.length < 1) {
         console.log("No device detected.");
     } else {
         WebMidi.outputs.forEach((device, index) => {
             console.log(`${index}: ${device.name}`);
+            let option = document.createElement("option");
+            option.text = `${index}: ${device.name}`;
+            option.value = index;
+            dropdownElem.appendChild(option);
         });
     }
 
