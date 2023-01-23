@@ -86,3 +86,23 @@ function getPointVelocity(currX, currY) {
 
     return info;
 }
+
+// the "slider" is defined between (startX,startY) and a radius around it
+// (posX,posY) is compared for closeness to the start, with a cutoff at radius
+function getCCValue(posX, posY, startX, startY, radius){
+    let value = 0; // value is between 0-127
+
+    let distance = getDistance(posX, posY, startX, startY);
+
+    // Only send a value if we are within radius
+    if(distance < radius) {
+        // the more close to start point, the higher the value
+        // on startpoint, closeness = 1
+        // at radius edge, closeness = 0
+        let closeness = 1 - distance/radius;
+        value = closeness * 127;
+
+    }
+
+    return Math.round(value);
+}

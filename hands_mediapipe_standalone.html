@@ -1,100 +1,120 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
-        <script src="midi.js"></script>
-        <script type="module">
-            const videoElement = document.getElementsByClassName('input_video')[0];
-            const canvasElement = document.getElementsByClassName('output_canvas')[0];
-            const canvasCtx = canvasElement.getContext('2d');
 
-            function onResults(results) {
-                canvasCtx.save();
-                canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
+    <script src="midi.js"></script>
+    <script type="module">
+        const videoElement = document.getElementsByClassName('input_video')[0];
+        const canvasElement = document.getElementsByClassName('output_canvas')[0];
+        const canvasCtx = canvasElement.getContext('2d');
 
-                // mirror the video output
-                canvasCtx.translate(canvasElement.width, 0);
-                canvasCtx.scale(-1, 1);
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-                canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-                if (results.multiHandLandmarks) {
-                    for (const landmarks of results.multiHandLandmarks) {
-                        //console.log(landmarks);
-                        // console.log(landmarks[8]);
-                        let indexTipPos = landmarks[8];
+            // mirror the video output
+            canvasCtx.translate(canvasElement.width, 0);
+            canvasCtx.scale(-1, 1);
 
-                        let v = getPointVelocity(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            if (results.multiHandLandmarks) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    //console.log(landmarks);
+                    // console.log(landmarks[8]);
+                    let indexTipPos = landmarks[8];
+
+                    // need a minimum z-value (closeness) in order to activate input mode
+                    if (indexTipPos.z < -0.03) {
+
+                        let v = getPointVelocity(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height);
                         // console.log(v);
-                        if(v.vx > 150 && v.distanceTraveled > 150){
+                        if (v.vx > 150 && v.distanceTraveled > 150) {
                             console.log("swiped left");
                         }
-                        else if(v.vx < -150 && v.distanceTraveled > 150){
+                        else if (v.vx < -150 && v.distanceTraveled > 150) {
                             console.log("swiped right");
                         }
-
+                        
+                        
                         
                         // play a midi note
                         let selectedPort = document.getElementById("outputs").value;
                         let midiout = WebMidi.outputs[selectedPort];
-                        let note = getRadialNote(indexTipPos.x*canvasElement.width, indexTipPos.y*canvasElement.height,
-                                                canvasElement.width/2, canvasElement.height/2,
-                                                300, scaleCmaj7);
+                        let note = getRadialNote(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height,
+                            canvasElement.width / 2, canvasElement.height / 2,
+                            300, scaleCmaj7);
                         midiout.channels[1].playNote(note);
                         canvasCtx.beginPath();
-                        canvasCtx.arc(canvasElement.width/2, canvasElement.height/2, 300, 0, 2 * Math.PI, false);
-                        canvasCtx.arc(canvasElement.width/2, canvasElement.height/2, 100, 0, 2 * Math.PI, false);
+                        canvasCtx.arc(canvasElement.width / 2, canvasElement.height / 2, 300, 0, 2 * Math.PI, false);
+                        canvasCtx.arc(canvasElement.width / 2, canvasElement.height / 2, 100, 0, 2 * Math.PI, false);
                         canvasCtx.lineWidth = 3;
                         canvasCtx.strokeStyle = '#ffffff';
                         canvasCtx.stroke();
-
-                        //console.log(midiout);
-                        //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-                        //               {color: '#00FF00', lineWidth: 5});
-                        drawLandmarks(canvasCtx, landmarks, {
-                            color: '#FF0000',
-                            lineWidth: 2
-                        });
+                        
+                        let cc = getCCValue(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height, 0, 0, 300);
+                        if(cc > 0) {
+                            console.log(cc);
+                            midiout.channels[1].sendControlChange(7, cc);
+                        }
+                        canvasCtx.beginPath();
+                        canvasCtx.lineWidth = 3;
+                        canvasCtx.strokeStyle = '#ffffff';
+                        canvasCtx.arc(0, 0, 300, 0, 2 * Math.PI, false);
+                        canvasCtx.stroke();
                     }
+                    
+                    //console.log(midiout);
+                    //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+                    //               {color: '#00FF00', lineWidth: 5});
+                    drawLandmarks(canvasCtx, landmarks, {
+                        color: '#FF0000',
+                        lineWidth: 2
+                    });
                 }
-                canvasCtx.restore();
             }
+            canvasCtx.restore();
+        }
 
-            const hands = new Hands({
-                locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                }
-            });
-            hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
-            hands.onResults(onResults);
+        const hands = new Hands({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }
+        });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.onResults(onResults);
 
-            const camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    await hands.send({image: videoElement});
-                },
-                width: 1280,
-                height: 720
-            });
-            camera.start();
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({ image: videoElement });
+            },
+            width: 1280,
+            height: 720
+        });
+        camera.start();
 
 
-            
-        </script>
-    </head>
 
-    <body>
-        <div>
-            <label for="outputs">MIDI port output</label>
-            <select name="outputs" id="outputs">
-            </select>
-        </div>
-        <div class="container">
-            <video class="input_video"></video>
-            <canvas class="output_canvas" width="1280px" height="720px"></canvas>
-        </div>
-    </body>
+    </script>
+</head>
+
+<body>
+    <div>
+        <label for="outputs">MIDI port output</label>
+        <select name="outputs" id="outputs">
+        </select>
+    </div>
+    <div class="container">
+        <video class="input_video"></video>
+        <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+    </div>
+</body>
+
 </html>
