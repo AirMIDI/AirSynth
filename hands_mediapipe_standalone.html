@@ -16,6 +16,8 @@
         const canvasElement = document.getElementsByClassName('output_canvas')[0];
         const canvasCtx = canvasElement.getContext('2d');
 
+        let previousNote = 0;
+
         function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -51,21 +53,29 @@
                         let note = getRadialNote(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height,
                             canvasElement.width / 2, canvasElement.height / 2,
                             300, scaleCmaj7);
-                        midiout.channels[1].playNote(note);
+                        if(previousNote != note){
+                            midiout.channels[1].sendNoteOff(previousNote);
+                            midiout.channels[1].sendNoteOn(note);
+                        }
+                        else if(note == 0 && previousNote != 0){
+                            midiout.channels[1].sendNoteOff(note);
+                        }
+                        previousNote  = note;
+
                         canvasCtx.beginPath();
                         canvasCtx.arc(canvasElement.width / 2, canvasElement.height / 2, 300, 0, 2 * Math.PI, false);
                         canvasCtx.arc(canvasElement.width / 2, canvasElement.height / 2, 100, 0, 2 * Math.PI, false);
-                        canvasCtx.lineWidth = 3;
+                        canvasCtx.lineWidth = 4;
                         canvasCtx.strokeStyle = '#ffffff';
                         canvasCtx.stroke();
                         
                         let cc = getCCValue(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height, 0, 0, 300);
                         if(cc > 0) {
-                            console.log(cc);
+                            //console.log(cc);
                             midiout.channels[1].sendControlChange(7, cc);
                         }
                         canvasCtx.beginPath();
-                        canvasCtx.lineWidth = 3;
+                        canvasCtx.lineWidth = 4;
                         canvasCtx.strokeStyle = '#ffffff';
                         canvasCtx.arc(0, 0, 300, 0, 2 * Math.PI, false);
                         canvasCtx.stroke();

@@ -50,6 +50,8 @@ function getRadialNote(x, y, cx, cy, radius, scale) {
     let radians = Math.atan2(noteY, noteX);
     let distance = getDistance(0, 0, noteX, noteY);
 
+    if (distance > radius) return 0;
+
     // 30% of the radius in center is a safe area
     if (distance > radius * 0.3) {
         let radialPercent = (radians + Math.PI) / (2 * Math.PI);
