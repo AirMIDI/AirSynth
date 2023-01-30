@@ -108,3 +108,84 @@ function getCCValue(posX, posY, startX, startY, radius){
 
     return Math.round(value);
 }
+
+
+// this function relies on being periodically called
+// GestureStart = finger has not moved for 1 second and gesture was inactive
+// GestureEnd = finger has not moved for 1 second and gesture was active
+let gestureActive = false;
+let gestureStartTime = null;
+let checkTimeStart = null;
+let elapsedTime = 0;
+let gestureStartThreshold = 1000;
+let startX;
+let startY;
+function checkForGestureStart(x,y){
+    if(gestureActive) {
+        return;
+    }
+    else if (checkTimeStart == null) {
+        checkTimeStart  = Date.now();
+        startX = x;
+        startY = y;
+    }
+    else if (getDistance(x,y,startX,startY) < 10) {
+        elapsedTime = Date.now() - checkTimeStart;
+        if(elapsedTime > gestureStartThreshold) {
+            console.log("1 second passed");
+    
+            // if xy position is about the same 
+            // if(getDistance(x,y,startX,startY) < 10){
+            console.log("GESTURE START: finger didnt move for 1s");
+            gestureActive = true;
+            gestureStartTime = Date.now();
+        }
+    }
+    // finger moved, reset 
+    else {
+        console.log("finger moved, reset");
+        checkTimeStart = null;
+    }
+}
+
+function isGestureActive(){
+    return gestureActive;
+}
+
+function getElapsedTime(){
+    return elapsedTime;
+}
+function getGestureThreshold(){
+    return gestureStartThreshold;
+}
+function getGestureStartPos(){
+    return {x: startX, y: startY};
+}
+function endGesture(){
+    gestureActive = false;
+}
+
+function doSliderGestureIfActive(x,y, controller){
+    if(gestureActive){
+        console.log("doin the gesture");
+    }
+}
+
+// // GestureEnd = pinky has been raised
+// // https://google.github.io/mediapipe/solutions/hands.html
+// function checkForGestureEnd(x,y,multiHandLandmarks, width, height){
+//     // no need to check if gesture is not started
+//     if(!gestureStarted) return;
+
+//     // pinky raised = distance from pinky base and pinky tip has increased
+//     let pinkyTipPos = multiHandLandmarks[0][20];
+//     let pinkyBasePos = multiHandLandmarks[0][17];
+//     let distanceBetween = getDistance(pinkyTipPos.x*width,pinkyTipPos.y*height,pinkyBasePos.x*width,pinkyBasePos.y*height);
+//     // console.log(distanceBetween);
+//     if(distanceBetween > 70){
+//         console.log("pinky raised, we ending");
+//         gestureStarted = false;
+//         // TODO: add a "confgiuration" step that measures your hand at different positions
+//         // so we don't have to guessestimate extended pinky distance?
+//     }
+// }
