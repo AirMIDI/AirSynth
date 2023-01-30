@@ -32,29 +32,39 @@
                 let posX = indexTipPos.x * canvasElement.width;
                 let posY = indexTipPos.y * canvasElement.height;
 
-                checkForGestureStart(posX, posY);
+                checkForGestureStartOrEnd(posX, posY);
                 doSliderGestureIfActive(posX, posY);
+                // checkForGestureEnd(posX, posY);
                 // checkForGestureEnd(posX,posY, results.multiHandLandmarks, canvasElement.width, canvasElement.height);
                 // checkForGestureEnd(posX,posY);
                         
                 if(isGestureActive()){
-                    canvasCtx.strokeStyle = '#00ff00';
-                    
+                    // draw a progress circle until gesture end
+                    let checkPos = getGestureCheckPos();
+                    let proportionUntilGestureEnd = getElapsedTime() / getGestureEndThreshold();
+                    canvasCtx.beginPath();
+                    canvasCtx.strokeStyle = 'orange';
+                    canvasCtx.lineWidth = 5;
+                    canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureEnd*2 * Math.PI, false);
+                    canvasCtx.stroke();
+
                     // draw spot where the gesture started
                     let startPos = getGestureStartPos();
                     canvasCtx.beginPath();
+                    canvasCtx.strokeStyle = '#00ff00';
                     canvasCtx.lineWidth = 5;
                     canvasCtx.arc(startPos.x, startPos.y, 15, 0, 2 * Math.PI, false);
                     canvasCtx.stroke();
+
                 }
                 else {
-                    // draw a progress circle
-                    let startPos = getGestureStartPos();
-                    let proportionUntilGestureStart = getElapsedTime() / getGestureThreshold();
+                    // draw a progress circle until gesture start
+                    let checkPos = getGestureCheckPos();
+                    let proportionUntilGestureStart = getElapsedTime() / getGestureStartThreshold();
                     canvasCtx.beginPath();
                     canvasCtx.strokeStyle = '#00ff00';
                     canvasCtx.lineWidth = 5;
-                    canvasCtx.arc(startPos.x, startPos.y, 15, 0, proportionUntilGestureStart*2 * Math.PI, false);
+                    canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureStart*2 * Math.PI, false);
                     canvasCtx.stroke();
 
                     canvasCtx.strokeStyle = '#ff0000';

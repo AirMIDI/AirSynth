@@ -115,51 +115,115 @@ function getCCValue(posX, posY, startX, startY, radius){
 // GestureEnd = finger has not moved for 1 second and gesture was active
 let gestureActive = false;
 let gestureStartTime = null;
-let checkTimeStart = null;
-let elapsedTime = 0;
+let gestureStartX;
+let gestureStartY;
 let gestureStartThreshold = 1000;
-let startX;
-let startY;
-function checkForGestureStart(x,y){
+let gestureEndThreshold = 1000;
+let elapsedTimeSinceCheck = 0;
+let checkTimeStart = null;
+let checkX;
+let checkY;
+function checkForGestureStartOrEnd(x,y){
     if(gestureActive) {
-        return;
-    }
-    else if (checkTimeStart == null) {
-        checkTimeStart  = Date.now();
-        startX = x;
-        startY = y;
-    }
-    else if (getDistance(x,y,startX,startY) < 10) {
-        elapsedTime = Date.now() - checkTimeStart;
-        if(elapsedTime > gestureStartThreshold) {
-            console.log("1 second passed");
-    
-            // if xy position is about the same 
-            // if(getDistance(x,y,startX,startY) < 10){
-            console.log("GESTURE START: finger didnt move for 1s");
-            gestureActive = true;
-            gestureStartTime = Date.now();
+        if (checkTimeStart == null) {
+            checkTimeStart  = Date.now();
+            checkX = x;
+            checkY = y;
+        }
+        
+        if (getDistance(x,y,checkX,checkY) < 10) {
+            elapsedTimeSinceCheck = Date.now() - checkTimeStart;
+            if(elapsedTimeSinceCheck > gestureEndThreshold) {
+                // if xy position is about the same 
+                console.log("GESTURE END: finger didnt move for 1s");
+                gestureActive = false;
+                checkTimeStart = null;
+            }
+        }
+        // finger moved, reset 
+        else {
+            console.log("END CHECK: finger moved, reset");
+            checkTimeStart = null;
+        }
+        
+    } 
+    else { // gesture NOT active
+        if (checkTimeStart == null) {
+            checkTimeStart  = Date.now();
+            checkX = x;
+            checkY = y;
+        }
+        
+        if (getDistance(x,y,checkX,checkY) < 10) {
+            elapsedTimeSinceCheck = Date.now() - checkTimeStart;
+            if(elapsedTimeSinceCheck > gestureStartThreshold) {
+                // if xy position is about the same 
+                console.log("GESTURE START: finger didnt move for 1s");
+                gestureActive = true;
+                gestureStartTime = Date.now();
+                gestureStartX = x;
+                gestureStartY = y;
+                checkTimeStart = null;
+            }
+        }
+        // finger moved, reset 
+        else {
+            console.log("START CHECK: finger moved, reset");
+            checkTimeStart = null;
         }
     }
-    // finger moved, reset 
-    else {
-        console.log("finger moved, reset");
-        checkTimeStart = null;
-    }
+    
 }
+
+// function checkForGestureEnd(x,y){
+//     if(!gestureActive) {
+//         return;
+//     }
+//     if (checkTimeStart == null) {
+//         checkTimeStart  = Date.now();
+//         checkX = x;
+//         checkY = y;
+//     }
+    
+//     if (getDistance(x,y,checkX,checkY) < 10) {
+//         elapsedTimeUntilStart = Date.now() - checkTimeStart;
+//         if(elapsedTimeUntilStart > gestureEndThreshold) {
+//             console.log("1 second passed");
+    
+//             // if xy position is about the same 
+//             // if(getDistance(x,y,startX,startY) < 10){
+//             console.log("GESTURE END: finger didnt move for 1s");
+//             gestureActive = false;
+//             // gestureStartTime = Date.now();
+//             // gestureStartX = x;
+//             // gestureStartY = y;
+//         }
+//     }
+//     // finger moved, reset 
+//     else {
+//         console.log("END CHECK: finger moved, reset");
+//         checkTimeStart = null;
+//     }
+// }
 
 function isGestureActive(){
     return gestureActive;
 }
 
 function getElapsedTime(){
-    return elapsedTime;
+    return elapsedTimeSinceCheck;
 }
-function getGestureThreshold(){
+function getGestureStartThreshold(){
     return gestureStartThreshold;
 }
+function getGestureEndThreshold(){
+    return gestureEndThreshold;
+}
+function getGestureCheckPos(){
+    return {x: checkX, y: checkY};
+}
 function getGestureStartPos(){
-    return {x: startX, y: startY};
+    return {x: gestureStartX, y: gestureStartY};
 }
 function endGesture(){
     gestureActive = false;
@@ -167,7 +231,7 @@ function endGesture(){
 
 function doSliderGestureIfActive(x,y, controller){
     if(gestureActive){
-        console.log("doin the gesture");
+        // console.log("doin the gesture");
     }
 }
 
