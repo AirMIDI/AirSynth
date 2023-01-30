@@ -91,17 +91,17 @@ function getPointVelocity(currX, currY) {
 
 // the "slider" is defined between (startX,startY) and a radius around it
 // (posX,posY) is compared for closeness to the start, with a cutoff at radius
-function getCCValue(posX, posY, startX, startY, radius){
+function getCCValue(posX, posY, startX, startY, radius) {
     let value = 0; // value is between 0-127
 
     let distance = getDistance(posX, posY, startX, startY);
 
     // Only send a value if we are within radius
-    if(distance < radius) {
+    if (distance < radius) {
         // the more close to start point, the higher the value
         // on startpoint, closeness = 1
         // at radius edge, closeness = 0
-        let closeness = 1 - distance/radius;
+        let closeness = 1 - distance / radius;
         value = closeness * 127;
 
     }
@@ -115,6 +115,8 @@ function getCCValue(posX, posY, startX, startY, radius){
 // GestureEnd = finger has not moved for 1 second and gesture was active
 let gestureActive = false;
 let gestureStartTime = null;
+let gestureEndTime = null;
+let stillnessTolerance = 15;
 let gestureStartX;
 let gestureStartY;
 let gestureStartThreshold = 1000;
@@ -123,17 +125,17 @@ let elapsedTimeSinceCheck = 0;
 let checkTimeStart = null;
 let checkX;
 let checkY;
-function checkForGestureStartOrEnd(x,y){
-    if(gestureActive) {
+function checkForGestureStartOrEnd(x, y) {
+    if (gestureActive) {
         if (checkTimeStart == null) {
-            checkTimeStart  = Date.now();
+            checkTimeStart = Date.now();
             checkX = x;
             checkY = y;
         }
-        
-        if (getDistance(x,y,checkX,checkY) < 10) {
+
+        if (getDistance(x, y, checkX, checkY) < stillnessTolerance) {
             elapsedTimeSinceCheck = Date.now() - checkTimeStart;
-            if(elapsedTimeSinceCheck > gestureEndThreshold) {
+            if (elapsedTimeSinceCheck > gestureEndThreshold) {
                 // if xy position is about the same 
                 console.log("GESTURE END: finger didnt move for 1s");
                 gestureActive = false;
@@ -145,18 +147,18 @@ function checkForGestureStartOrEnd(x,y){
             console.log("END CHECK: finger moved, reset");
             checkTimeStart = null;
         }
-        
-    } 
+
+    }
     else { // gesture NOT active
         if (checkTimeStart == null) {
-            checkTimeStart  = Date.now();
+            checkTimeStart = Date.now();
             checkX = x;
             checkY = y;
         }
-        
-        if (getDistance(x,y,checkX,checkY) < 10) {
+
+        if (getDistance(x, y, checkX, checkY) < stillnessTolerance) {
             elapsedTimeSinceCheck = Date.now() - checkTimeStart;
-            if(elapsedTimeSinceCheck > gestureStartThreshold) {
+            if (elapsedTimeSinceCheck > gestureStartThreshold) {
                 // if xy position is about the same 
                 console.log("GESTURE START: finger didnt move for 1s");
                 gestureActive = true;
@@ -172,84 +174,38 @@ function checkForGestureStartOrEnd(x,y){
             checkTimeStart = null;
         }
     }
-    
+
 }
 
-// function checkForGestureEnd(x,y){
-//     if(!gestureActive) {
-//         return;
-//     }
-//     if (checkTimeStart == null) {
-//         checkTimeStart  = Date.now();
-//         checkX = x;
-//         checkY = y;
-//     }
-    
-//     if (getDistance(x,y,checkX,checkY) < 10) {
-//         elapsedTimeUntilStart = Date.now() - checkTimeStart;
-//         if(elapsedTimeUntilStart > gestureEndThreshold) {
-//             console.log("1 second passed");
-    
-//             // if xy position is about the same 
-//             // if(getDistance(x,y,startX,startY) < 10){
-//             console.log("GESTURE END: finger didnt move for 1s");
-//             gestureActive = false;
-//             // gestureStartTime = Date.now();
-//             // gestureStartX = x;
-//             // gestureStartY = y;
-//         }
-//     }
-//     // finger moved, reset 
-//     else {
-//         console.log("END CHECK: finger moved, reset");
-//         checkTimeStart = null;
-//     }
-// }
-
-function isGestureActive(){
+function isGestureActive() {
     return gestureActive;
 }
 
-function getElapsedTime(){
+function getElapsedTime() {
     return elapsedTimeSinceCheck;
 }
-function getGestureStartThreshold(){
+function getGestureStartThreshold() {
     return gestureStartThreshold;
 }
-function getGestureEndThreshold(){
+function getGestureEndThreshold() {
     return gestureEndThreshold;
 }
-function getGestureCheckPos(){
-    return {x: checkX, y: checkY};
+function getGestureCheckPos() {
+    return { x: checkX, y: checkY };
 }
-function getGestureStartPos(){
-    return {x: gestureStartX, y: gestureStartY};
+function getGestureStartPos() {
+    return { x: gestureStartX, y: gestureStartY };
 }
-function endGesture(){
+function endGesture() {
     gestureActive = false;
 }
 
-function doSliderGestureIfActive(x,y, controller){
-    if(gestureActive){
+function doSliderGestureIfActive(x, y, midiout, controller) {
+    if (gestureActive) {
         // console.log("doin the gesture");
+        let cc = getCCValue(x, y, gestureStartX, gestureStartY, 300);
+        if(cc > 0) {
+            midiout.channels[1].sendControlChange(controller, cc);
+        }
     }
 }
-
-// // GestureEnd = pinky has been raised
-// // https://google.github.io/mediapipe/solutions/hands.html
-// function checkForGestureEnd(x,y,multiHandLandmarks, width, height){
-//     // no need to check if gesture is not started
-//     if(!gestureStarted) return;
-
-//     // pinky raised = distance from pinky base and pinky tip has increased
-//     let pinkyTipPos = multiHandLandmarks[0][20];
-//     let pinkyBasePos = multiHandLandmarks[0][17];
-//     let distanceBetween = getDistance(pinkyTipPos.x*width,pinkyTipPos.y*height,pinkyBasePos.x*width,pinkyBasePos.y*height);
-//     // console.log(distanceBetween);
-//     if(distanceBetween > 70){
-//         console.log("pinky raised, we ending");
-//         gestureStarted = false;
-//         // TODO: add a "confgiuration" step that measures your hand at different positions
-//         // so we don't have to guessestimate extended pinky distance?
-//     }
-// }

@@ -26,6 +26,9 @@
             canvasCtx.translate(canvasElement.width, 0);
             canvasCtx.scale(-1, 1);
 
+            let selectedPort = document.getElementById("outputs").value;
+            let midiout = WebMidi.outputs[selectedPort];
+
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             if (results.multiHandLandmarks.length > 0) {
                 let indexTipPos = results.multiHandLandmarks[0][8];
@@ -33,12 +36,13 @@
                 let posY = indexTipPos.y * canvasElement.height;
 
                 checkForGestureStartOrEnd(posX, posY);
-                doSliderGestureIfActive(posX, posY);
+
                 // checkForGestureEnd(posX, posY);
                 // checkForGestureEnd(posX,posY, results.multiHandLandmarks, canvasElement.width, canvasElement.height);
                 // checkForGestureEnd(posX,posY);
-                        
+                
                 if(isGestureActive()){
+                    doSliderGestureIfActive(posX, posY, midiout, 7);
                     // draw a progress circle until gesture end
                     let checkPos = getGestureCheckPos();
                     let proportionUntilGestureEnd = getElapsedTime() / getGestureEndThreshold();
