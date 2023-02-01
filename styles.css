@@ -1,0 +1,30 @@
+html, input, select{
+    font-family: 'Helvetica', sans-serif;
+}
+
+body {
+    margin: 0;
+    display: grid;
+    place-content: center;
+}
+
+.options {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+#console {
+    height: 10rem;
+    overflow: auto;
+    padding: 1rem;
+}
+
+.output_canvas {
+    width: 100%;
+    background-color: rgb(41, 55, 68);
+}
+
+video {
+    display: none;
+}

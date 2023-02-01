@@ -91,7 +91,7 @@ function getPointVelocity(currX, currY) {
 
 // the "slider" is defined between (startX,startY) and a radius around it
 // (posX,posY) is compared for closeness to the start, with a cutoff at radius
-function getCCValue(posX, posY, startX, startY, radius) {
+function getCCValueRadial(posX, posY, startX, startY, radius) {
     let value = 0; // value is between 0-127
 
     let distance = getDistance(posX, posY, startX, startY);
@@ -107,6 +107,18 @@ function getCCValue(posX, posY, startX, startY, radius) {
     }
 
     return Math.round(value);
+}
+
+// width = max x, height = max y
+function getCCValueXYAxisMode(posX, posY, width, height, axis){
+    if(axis === "x"){
+        let position = posX/width;
+        return Math.round(position*127);
+    }
+    else {
+        let position = posY/height;
+        return Math.round(position*127);
+    }
 }
 
 
@@ -203,9 +215,17 @@ function endGesture() {
 function doSliderGestureIfActive(x, y, midiout, controller) {
     if (gestureActive) {
         // console.log("doin the gesture");
-        let cc = getCCValue(x, y, gestureStartX, gestureStartY, 300);
-        if(cc > 0) {
-            midiout.channels[1].sendControlChange(controller, cc);
-        }
+        // let cc = getCCValueRadial(x, y, gestureStartX, gestureStartY, 300);
+        let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "x");
+        let ccy = getCCValueXYAxisMode(x, y, 1280, 720, "y");
+        // if(cc > 0) {
+        //     midiout.channels[1].sendControlChange(controller, cc);
+        //     document.getElementById('console').innerHTML = `<div>CC: ${controller} | VALUE: ${cc}</div>`;
+        // }
+        midiout.channels[1].sendControlChange(102, ccx);
+        document.getElementById('console').innerHTML = `<div>CC: 102 | VALUE: ${ccx}</div>`;
+        
+        midiout.channels[1].sendControlChange(103, ccy);
+        document.getElementById('console').innerHTML += `<div>CC: 103 | VALUE: ${ccy}</div>`;
     }
 }
