@@ -41,48 +41,11 @@
                 let posY = indexTipPos.y * canvasElement.height;
 
                 checkForGestureStartOrEnd(posX, posY);
-
-                // checkForGestureEnd(posX, posY);
-                // checkForGestureEnd(posX,posY, results.multiHandLandmarks, canvasElement.width, canvasElement.height);
-                // checkForGestureEnd(posX,posY);
-                
-                if(isGestureActive()){
-                    doSliderGestureIfActive(posX, posY, midiout, 7);
-                    // draw a progress circle until gesture end
-                    let checkPos = getGestureCheckPos();
-                    let proportionUntilGestureEnd = getElapsedTime() / getGestureEndThreshold();
-                    canvasCtx.beginPath();
-                    canvasCtx.strokeStyle = 'orange';
-                    canvasCtx.lineWidth = 5;
-                    canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureEnd*2 * Math.PI, false);
-                    canvasCtx.stroke();
-
-                    // draw spot where the gesture started
-                    let startPos = getGestureStartPos();
-                    canvasCtx.beginPath();
-                    canvasCtx.strokeStyle = '#00ff00';
-                    canvasCtx.lineWidth = 5;
-                    canvasCtx.arc(startPos.x, startPos.y, 15, 0, 2 * Math.PI, false);
-                    canvasCtx.stroke();
-
-                }
-                else {
-                    // draw a progress circle until gesture start
-                    let checkPos = getGestureCheckPos();
-                    let proportionUntilGestureStart = getElapsedTime() / getGestureStartThreshold();
-                    canvasCtx.beginPath();
-                    canvasCtx.strokeStyle = '#00ff00';
-                    canvasCtx.lineWidth = 5;
-                    canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureStart*2 * Math.PI, false);
-                    canvasCtx.stroke();
-
-                    canvasCtx.strokeStyle = '#ff0000';
-                }
-                canvasCtx.lineWidth = 20;
-                canvasCtx.beginPath();
-                canvasCtx.moveTo(0,0);
-                canvasCtx.lineTo(canvasElement.width,0);
-                canvasCtx.stroke();
+                drawGestureStatus(canvasCtx, canvasElement);
+    
+                doSliderGestureIfActive(posX, posY, midiout, 7, 1);
+               
+                drawGestureActiveStatus(canvasCtx, canvasElement);
 
                 for (const landmarks of results.multiHandLandmarks) {
                     //console.log(landmarks);
@@ -172,23 +135,57 @@
 </head>
 
 <body>
-    <div class="options">
-        <div>
-            <label for="outputs">MIDI port output</label>
-            <select name="outputs" id="outputs"></select>
+    <div class="panel">
+        <div class="options">
+            <h1>CONFIG</h1>
+            <div>
+                <label for="outputs">MIDI port output</label>
+                <select name="outputs" id="outputs"></select>
+            </div>
+            <div>
+                <label for="videotoggle">Enable video</label>
+                <input type="checkbox" id="videotoggle" checked>
+            </div>
+            <div>
+                <label for="G0">G1 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="101" id="G0" checked>
+            </div>
+            <div>
+                <label for="G1">G2 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="102"id="G1" checked>
+            </div>
+            <div>
+                <label for="G2">G3 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="103" id="G2" checked>
+            </div>            
+            <div>
+                <label for="G3">G4 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="104" id="G3" checked>
+            </div>
+            <div>
+                <label for="G4">G5 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="105" id="G4" checked>
+            </div>
         </div>
-        <div>
-            <label for="videotoggle">Enable video</label>
-            <input type="checkbox" id="videotoggle" checked>
+
+        <br>
+
+        <div class="outputs">
+            <h1>OUTPUT</h1>
+            <div id="G0-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G1-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G2-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G3-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G4-OUT">CC: 0 | VALUE: 0</div>
+            <div id="console">
+                output
+            </div>
         </div>
-        
+
     </div>
     <div class="container">
         <video class="input_video"></video>
         <canvas class="output_canvas" width="1280px" height="720px"></canvas>
-    </div>
-    <div id="console">
-        output
     </div>
 </body>
 
