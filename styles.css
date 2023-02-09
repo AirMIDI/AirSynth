@@ -70,6 +70,18 @@ h1::after {
 
 .active {
     background-color: var(--mint);
+    animation: active 2s infinite; 
+}
+@keyframes active {
+    0% {
+        background-color: var(--mint);
+    }
+    50% {
+        background-color: var(--tiffany);
+    }
+    100% {
+        background-color: var(--mint);
+    }
 }
 
 /* #console {
