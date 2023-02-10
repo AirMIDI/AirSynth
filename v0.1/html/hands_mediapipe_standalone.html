@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+<!--    <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>-->
+    <script type="module">
+        const videoElement = document.getElementsByClassName('input_video')[0];
+        const canvasElement = document.getElementsByClassName('output_canvas')[0];
+        const canvasCtx = canvasElement.getContext('2d');
+        canvasCtx.filter = 'grayscale(1)';
+        const textElement = document.getElementById('mytextarea')
+
+        async function updatePredictions() {
+            const sess = await ort.InferenceSession.create("../weights/gesture_onnx_0_1.onnx");
+
+            canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            const imageData = canvasCtx.getImageData(0, 0, 64, 64).data;
+
+            var pData = new Float32Array(64*64);
+            for(var i=0; i<64*64; i++){
+                pData[i] = imageData[i*4]/255.0;
+            }
+
+            // Get the predictions for the canvas data.
+            const inputData = new ort.Tensor('float32', pData, [1, 1, 64,64]);
+
+            const feeds = {
+                'input.1': inputData
+            };
+
+            const outputMap = await sess.run(feeds);
+            console.log(outputMap[Object.keys(outputMap)[0]].data);
+            var result = outputMap[Object.keys(outputMap)[0]].data;
+            const maxPrediction = result.indexOf(Math.max(...result));
+            console.log(maxPrediction);
+
+            for (let i = 0; i < result.length; i++) {
+                if(predictions[i]==maxPrediction){
+                    textElement.innerHTML = i.toString();
+                }
+            }
+        }
+
+        function startup() {
+            navigator.mediaDevices
+                .getUserMedia({ video: true, audio: false })
+                .then((stream) => {
+                  videoElement.srcObject = stream;
+                  videoElement.play();
+                })
+                .catch((err) => {
+                  console.error(`An error occurred: ${err}`);
+                });
+        }
+
+        async function loop_detect(){
+            while(true){
+                await updatePredictions();
+            }
+        }
+
+        window.addEventListener("load", startup, false);
+        videoElement.addEventListener('loadeddata', (e) => {
+           if(videoElement.readyState >= 3){
+               loop_detect();
+           }
+        });
+    </script>
+</head>
+
+<body>
+<div class="container">
+    <video class="input_video">Video Not Available</video>
+    <canvas class="output_canvas" width="720px" height="720px"></canvas>
+    <textarea id="gesture">0</textarea>
+</div>
+</body>
+</html>
