@@ -1,7 +1,7 @@
 import torch
 
 import box_utils
-from .data_preprocessing import PredictionTransform
+from data_preprocessing import PredictionTransform
 
 
 class Predictor:
