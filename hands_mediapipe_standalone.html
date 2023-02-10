@@ -1,58 +1,194 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webmidi@latest/dist/iife/webmidi.iife.js"></script>
+    <script src="midi.js"></script>
+    <link rel="stylesheet" href="styles.css"></link>
     <script type="module">
-const videoElement = document.getElementsByClassName('input_video')[0];
-const canvasElement = document.getElementsByClassName('output_canvas')[0];
-const canvasCtx = canvasElement.getContext('2d');
+        const videoElement = document.getElementsByClassName('input_video')[0];
+        const canvasElement = document.getElementsByClassName('output_canvas')[0];
+        const canvasCtx = canvasElement.getContext('2d');
 
-function onResults(results) {
-  canvasCtx.save();
-  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(
-      results.image, 0, 0, canvasElement.width, canvasElement.height);
-  if (results.multiHandLandmarks) {
-    for (const landmarks of results.multiHandLandmarks) {
-	console.log(landmarks);
-      //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-      //               {color: '#00FF00', lineWidth: 5});
-      drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
-    }
-  }
-  canvasCtx.restore();
-}
+        let previousNote = 0;
 
-const hands = new Hands({locateFile: (file) => {
-  return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-}});
-hands.setOptions({
-  maxNumHands: 2,
-  modelComplexity: 1,
-  minDetectionConfidence: 0.5,
-  minTrackingConfidence: 0.5
-});
-hands.onResults(onResults);
+        let showVideo = true;
 
-const camera = new Camera(videoElement, {
-  onFrame: async () => {
-    await hands.send({image: videoElement});
-  },
-  width: 1280,
-  height: 720
-});
-camera.start();
-</script>
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            // mirror the video output
+            canvasCtx.translate(canvasElement.width, 0);
+            canvasCtx.scale(-1, 1);
+
+            let selectedPort = document.getElementById("outputs").value;
+            let midiout = WebMidi.outputs[selectedPort];
+
+            if(showVideo){
+                canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            }
+            if (results.multiHandLandmarks.length > 0) {
+                let indexTipPos = results.multiHandLandmarks[0][8];
+                let posX = indexTipPos.x * canvasElement.width;
+                let posY = indexTipPos.y * canvasElement.height;
+
+                checkForGestureStartOrEnd(posX, posY);
+                drawGestureStatus(canvasCtx, canvasElement);
+    
+                doSliderGestureIfActive(posX, posY, midiout, 7, 1);
+               
+                drawGestureActiveStatus(canvasCtx, canvasElement);
+
+                for (const landmarks of results.multiHandLandmarks) {
+                    //console.log(landmarks);
+                    // let indexTipPos = landmarks[8];
+
+                    // // need a minimum z-value (closeness) in order to activate input mode
+                    // if (indexTipPos.z < -0.03) {
+
+                    //     let v = getPointVelocity(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height);
+                    //     // console.log(v);
+                    //     if (v.vx > 150 && v.distanceTraveled > 150) {
+                    //         console.log("swiped left");
+                    //     }
+                    //     else if (v.vx < -150 && v.distanceTraveled > 150) {
+                    //         console.log("swiped right");
+                    //     }
+                        
+                        
+                        
+                    //     // play a midi note
+                    //     let selectedPort = document.getElementById("outputs").value;
+                    //     let midiout = WebMidi.outputs[selectedPort];
+                    //     let note = getRadialNote(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height,
+                    //         canvasElement.width / 2, canvasElement.height / 2,
+                    //         300, scaleCmaj7);
+                    //     if(previousNote != note){
+                    //         midiout.channels[1].sendNoteOff(previousNote);
+                    //         midiout.channels[1].sendNoteOn(note);
+                    //     }
+                    //     else if(note == 0 && previousNote != 0){
+                    //         midiout.channels[1].sendNoteOff(note);
+                    //     }
+                    //     previousNote  = note;
+
+                    //     canvasCtx.beginPath();
+                    //     canvasCtx.arc(canvasElement.width / 2, canvasElement.height / 2, 300, 0, 2 * Math.PI, false);
+                    //     canvasCtx.arc(canvasElement.width / 2, canvasElement.height / 2, 100, 0, 2 * Math.PI, false);
+                    //     canvasCtx.lineWidth = 4;
+                    //     canvasCtx.strokeStyle = '#ffffff';
+                    //     canvasCtx.stroke();
+                        
+                    //     let cc = getCCValue(indexTipPos.x * canvasElement.width, indexTipPos.y * canvasElement.height, 0, 0, 300);
+                    //     if(cc > 0) {
+                    //         //console.log(cc);
+                    //         midiout.channels[1].sendControlChange(7, cc);
+                    //     }
+                    //     canvasCtx.beginPath();
+                    //     canvasCtx.lineWidth = 4;
+                    //     canvasCtx.strokeStyle = '#ffffff';
+                    //     canvasCtx.arc(0, 0, 300, 0, 2 * Math.PI, false);
+                    //     canvasCtx.stroke();
+                    // }
+                    
+                    //drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+                    //               {color: '#00FF00', lineWidth: 5});
+                    drawLandmarks(canvasCtx, landmarks, {
+                        color: '#FF0000',
+                        lineWidth: 2
+                    });
+                }
+            }
+            canvasCtx.restore();
+        }
+
+        const hands = new Hands({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+            }
+        });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        hands.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({ image: videoElement });
+            },
+            width: 1280,
+            height: 720
+        });
+        camera.start();
+
+        document.querySelector('#videotoggle').addEventListener('change', () => {
+            showVideo = !showVideo;
+        });
+
+    </script>
 </head>
 
 <body>
-<div class="container">
-    <video class="input_video"></video>
-    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
-</div>
+    <div class="panel">
+        <div class="options">
+            <h1>CONFIG</h1>
+            <div>
+                <label for="outputs">MIDI port output</label>
+                <select name="outputs" id="outputs"></select>
+            </div>
+            <div>
+                <label for="videotoggle">Enable video</label>
+                <input type="checkbox" id="videotoggle" checked>
+            </div>
+            <div>
+                <label for="G0">G1 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="101" id="G0" checked>
+                <label for="G0-AXIS">G1 Axis</label>
+                <select id="G0-AXIS">
+                    <option value="x">x</option>
+                    <option value="y">y</option>
+                </select>
+            </div>
+            <div>
+                <label for="G1">G2 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="102"id="G1" checked>
+            </div>
+            <div>
+                <label for="G2">G3 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="103" id="G2" checked>
+            </div>            
+            <div>
+                <label for="G3">G4 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="104" id="G3" checked>
+            </div>
+            <div>
+                <label for="G4">G5 CC</label>
+                <input type="number" max="127" min="0" placeholder="MIDI CC 0-127" value="105" id="G4" checked>
+            </div>
+        </div>
+
+        <br>
+
+        <div class="outputs">
+            <h1>OUTPUT</h1>
+            <div id="G0-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G1-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G2-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G3-OUT">CC: 0 | VALUE: 0</div>
+            <div id="G4-OUT">CC: 0 | VALUE: 0</div>
+        </div>
+
+    </div>
+    <div class="container">
+        <video class="input_video"></video>
+        <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+    </div>
 </body>
+
 </html>

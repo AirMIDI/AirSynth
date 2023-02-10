@@ -1,0 +1,108 @@
+:root {
+    --gunmetal: #293744;
+    --gunmetal-2: #455d73;
+    --pale: #ebd4cb;
+    --rosy: #da9f93;
+    --tiffany: #7ae1d5;
+    --mint: #36bf9d;
+}
+
+html, input, select{
+    font-family: 'Helvetica', sans-serif;
+}
+
+body {
+    margin: 0;
+    background-color: var(--gunmetal-2);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+    /* flex-wrap: wrap; */
+    justify-content: center;
+}
+
+.panel {
+    box-sizing: border-box;
+    width: 300px;
+    max-height: 720px;
+    color: white;
+    background-color: var(--gunmetal);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem;
+}
+
+h1 {
+    margin: 0.5rem 0;
+    font-size: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+h1::after {
+    content: " ";
+    border: 1px solid var(--tiffany);
+    border-radius: 1px;
+    margin: 0.5rem 0;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.options > div {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+}
+
+.outputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* .outputs > div {
+    background-color: var(--rosy);
+} */
+
+.active {
+    background-color: var(--mint);
+    animation: active 2s infinite; 
+}
+@keyframes active {
+    0% {
+        background-color: var(--mint);
+    }
+    50% {
+        background-color: var(--tiffany);
+    }
+    100% {
+        background-color: var(--mint);
+    }
+}
+
+/* #console {
+    height: 10rem;
+    overflow: auto;
+    padding: 1rem;
+} */
+
+.container {
+    margin: 1rem;
+    max-width: 1280px;
+    max-height: 720px;
+    background-color: var(--gunmetal);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.output_canvas {
+    height: 100%;
+}
+
+video {
+    display: none;
+}
