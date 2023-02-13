@@ -203,6 +203,7 @@ function endGesture() {
     gestureActive = false;
 }
 
+let detectedGestureId = null;
 let activeGestureId = null;
 let gestureCCs = [0,0,0,0,0];
 let gestureValues = [0,0,0,0,0];
@@ -231,10 +232,10 @@ function doSliderGestureIfActive(x, y, midiout, cc, gestureId) {
     else {
         activeGestureId = null;
     }
-    updateOutputStatus();
+    // updateOutputStatus();
 }
 
-function drawGestureStatus(canvasCtx, canvasElement) {
+function drawGestureDetectionStatus(canvasCtx, canvasElement) {
     if (isGestureActive()) {
         // draw a progress circle until gesture end
         let checkPos = getGestureCheckPos();
@@ -286,18 +287,45 @@ function drawGestureActiveStatus(canvasCtx, canvasElement) {
     canvasCtx.stroke();
 }
 
-function updateOutputStatus() {
-    let i = activeGestureId;
-    if(i != null) {
-        let elem = document.getElementById(`G${i}-OUT`);
-        elem.innerHTML = `CC: ${gestureCCs[i]} | VALUE: ${gestureValues[i]}`;
-        elem.classList.add("active");
-    }
-    else {
+// function updateOutputStatus() {
+//     let i = activeGestureId;
+//     if(i != null) {
+//         let elem = document.getElementById(`G${i}-OUT`);
+//         elem.innerHTML = `CC: ${gestureCCs[i]} | VALUE: ${gestureValues[i]}`;
+//         elem.classList.add("active");
+//     }
+//     else {
+//         gestureCCs.forEach((cc, index) => {
+//             let elem = document.getElementById(`G${index}-OUT`);
+//             elem.classList.remove("active");
+//         });
+//     }
+// }
+
+function drawOutputStatus(){
+    let outputSection = document.getElementById("out");
+    if(outputSection.children.length == 0){
+        // populate with elements if there are none
         gestureCCs.forEach((cc, index) => {
-            let elem = document.getElementById(`G${index}-OUT`);
-            elem.classList.remove("active");
+            let d = document.createElement("div");
+            d.innerText = `G${index+1} | CC: ${cc} | VAL: 0`;
+            outputSection.appendChild(d);
         });
     }
-
+    else {
+        // update existing elements if they exist
+        gestureCCs.forEach((cc, index) => {
+            let current = outputSection.children[index];
+            if(index == activeGestureId){
+                current.classList.add("active");
+                current.innerText = `G${index+1} | CC: ${cc} | VAL: ${gestureValues[index]}`;
+            }
+            else if(index == detectedGestureId){
+                current.classList.add("detected");
+            }
+            else {
+                current.classList.remove("active");
+            }
+        });
+    }
 }

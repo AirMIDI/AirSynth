@@ -58,31 +58,28 @@ h1::after {
     grid-template-columns: 1fr 2fr;
 }
 
-.outputs {
+.outputs , #out {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-/* .outputs > div {
-    background-color: var(--rosy);
-} */
-
 .active {
-    background-color: var(--mint);
-    animation: active 2s infinite; 
+    /* background-color: var(--mint); */
+    background-color: rgb(38, 194, 129) !important;
 }
-@keyframes active {
-    0% {
-        background-color: var(--mint);
-    }
-    50% {
-        background-color: var(--tiffany);
-    }
-    100% {
-        background-color: var(--mint);
-    }
+/* .inactive {
+} */
+.detected {
+    background-color: rgb(255, 155, 60) !important;
 }
+
+#out > div {
+
+    /*inactive by dfault*/
+    background-color: rgb(243, 83, 83);
+}
+
 
 /* #console {
     height: 10rem;
