@@ -129,7 +129,7 @@ let checkTimeStart = null;
 let checkX;
 let checkY;
 function checkForGestureStartOrEnd(x, y) {
-    if (gestureActive) {
+    if (gestureActive) { // check for gesture end
         if (checkTimeStart == null) {
             checkTimeStart = Date.now();
             checkX = x;
@@ -152,30 +152,30 @@ function checkForGestureStartOrEnd(x, y) {
         }
 
     }
-    else { // gesture NOT active
-        if (checkTimeStart == null) {
-            checkTimeStart = Date.now();
-            checkX = x;
-            checkY = y;
-        }
+    else { // check for gesture start
+        // if (checkTimeStart == null) {
+        //     checkTimeStart = Date.now();
+        //     checkX = x;
+        //     checkY = y;
+        // }
 
-        if (getDistance(x, y, checkX, checkY) < stillnessTolerance) {
-            elapsedTimeSinceCheck = Date.now() - checkTimeStart;
-            if (elapsedTimeSinceCheck > gestureStartThreshold) {
-                // if xy position is about the same 
-                console.log("GESTURE START: finger didnt move for 1s");
-                gestureActive = true;
-                gestureStartTime = Date.now();
-                gestureStartX = x;
-                gestureStartY = y;
-                checkTimeStart = null;
-            }
-        }
-        // finger moved, reset 
-        else {
-            console.log("START CHECK: finger moved, reset");
-            checkTimeStart = null;
-        }
+        // if (getDistance(x, y, checkX, checkY) < stillnessTolerance) {
+        //     elapsedTimeSinceCheck = Date.now() - checkTimeStart;
+        //     if (elapsedTimeSinceCheck > gestureStartThreshold) {
+        //         // if xy position is about the same 
+        //         console.log("GESTURE START: finger didnt move for 1s");
+        //         gestureActive = true;
+        //         gestureStartTime = Date.now();
+        //         gestureStartX = x;
+        //         gestureStartY = y;
+        //         checkTimeStart = null;
+        //     }
+        // }
+        // // finger moved, reset 
+        // else {
+        //     console.log("START CHECK: finger moved, reset");
+        //     checkTimeStart = null;
+        // }
     }
 
 }
@@ -202,7 +202,9 @@ function getGestureStartPos() {
 function endGesture() {
     gestureActive = false;
 }
-
+function startGesture() {
+    gestureActive = true;
+}
 
 let detectedGestureId = null;
 let activeGestureId = null;
@@ -215,7 +217,8 @@ function updateGestureCC(gestureId, cc){
 
 function doSliderGestureIfActive(x, y, midiout, gestureId) {
     if (isGestureActive()) {
-        let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "x");
+        // let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "x");
+        let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "y");
 
         activeGestureId = gestureId;
         cc = gestureCCs[gestureId];
@@ -244,13 +247,13 @@ function drawGestureDetectionStatus(canvasCtx, canvasElement) {
     }
     else {
         // draw a progress circle until gesture start
-        let checkPos = getGestureCheckPos();
-        let proportionUntilGestureStart = getElapsedTime() / getGestureStartThreshold();
-        canvasCtx.beginPath();
-        canvasCtx.strokeStyle = '#00ff00';
-        canvasCtx.lineWidth = 5;
-        canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureStart * 2 * Math.PI, false);
-        canvasCtx.stroke();
+        // let checkPos = getGestureCheckPos();
+        // let proportionUntilGestureStart = getElapsedTime() / getGestureStartThreshold();
+        // canvasCtx.beginPath();
+        // canvasCtx.strokeStyle = '#00ff00';
+        // canvasCtx.lineWidth = 5;
+        // canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureStart * 2 * Math.PI, false);
+        // canvasCtx.stroke();
     }
 }
 

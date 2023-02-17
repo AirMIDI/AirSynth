@@ -43,6 +43,23 @@
                 let posX = indexTipPos.x * canvasElement.width;
                 let posY = indexTipPos.y * canvasElement.height;
 
+                let info = getPointVelocity(posX, posY);
+                if(info.vx < -150 && info.distanceTraveled > 150){
+                    console.log("swiped right");
+                    startGesture();
+                }
+                if(info.vx > 150 && info.distanceTraveled > 150){
+                    console.log("swiped left");
+                    if(gestureId < 4){
+                        gestureId += 1;
+                    }
+                    else {
+                        gestureId = 0;
+                    }
+                }
+
+
+
                 checkForGestureStartOrEnd(posX, posY);
                 drawGestureDetectionStatus(canvasCtx, canvasElement);
 
@@ -98,6 +115,7 @@
         
         <div class="options">
             <h1>CONFIG</h1>
+            <!-- always on mode option? -->
 
             <div>
                 <label for="outputs">MIDI port output</label>
