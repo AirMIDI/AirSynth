@@ -102,14 +102,14 @@ function getCCValueRadial(posX, posY, startX, startY, radius) {
 
 // width = max x, height = max y
 function getCCValueXYAxisMode(posX, posY, width, height, axis) {
+    let position = 0;
     if (axis === "x") {
-        let position = posX / width;
-        return Math.round(position * 127);
+        position = posX / width;
     }
     else {
-        let position = posY / height;
-        return Math.round(position * 127);
+        position = posY / height;
     }
+    return Math.min(Math.max(Math.round(position * 127), 0), 127);
 }
 
 
@@ -203,34 +203,29 @@ function endGesture() {
     gestureActive = false;
 }
 
+
 let detectedGestureId = null;
 let activeGestureId = null;
-let gestureCCs = [0,0,0,0,0];
+let gestureCCs = [101,102,103,104,105];
 let gestureValues = [0,0,0,0,0];
-function doSliderGestureIfActive(x, y, midiout, cc, gestureId) {
-    if (isGestureActive()) {
-        // // console.log("doin the gesture");
-        // // let cc = getCCValueRadial(x, y, gestureStartX, gestureStartY, 300);
-        let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "x");
-        // let ccy = getCCValueXYAxisMode(x, y, 1280, 720, "y");
-        // // if(cc > 0) {
-        // //     midiout.channels[1].sendControlChange(controller, cc);
-        // //     document.getElementById('console').innerHTML = `<div>CC: ${controller} | VALUE: ${cc}</div>`;
-        // // }
-        // midiout.channels[1].sendControlChange(102, ccx);
-        // document.getElementById('console').innerHTML = `<div>CC: 102 | VALUE: ${ccx}</div>`;
 
-        // midiout.channels[1].sendControlChange(103, ccy);
-        // document.getElementById('console').innerHTML += `<div>CC: 103 | VALUE: ${ccy}</div>`;
+function updateGestureCC(gestureId, cc){
+    gestureCCs[gestureId] = Number(cc);
+}
+
+function doSliderGestureIfActive(x, y, midiout, gestureId) {
+    if (isGestureActive()) {
+        let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "x");
 
         activeGestureId = gestureId;
-        gestureCCs[activeGestureId] = cc;
+        cc = gestureCCs[gestureId];
         gestureValues[activeGestureId] = ccx;
 
         midiout.channels[1].sendControlChange(cc, ccx);
     }
     else {
         activeGestureId = null;
+        detectedGestureId = gestureId;
     }
     // updateOutputStatus();
 }
@@ -245,14 +240,6 @@ function drawGestureDetectionStatus(canvasCtx, canvasElement) {
         canvasCtx.lineWidth = 5;
         canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureEnd * 2 * Math.PI, false);
         canvasCtx.stroke();
-
-        // draw spot where the gesture started
-        // let startPos = getGestureStartPos();
-        // canvasCtx.beginPath();
-        // canvasCtx.strokeStyle = '#00ff00';
-        // canvasCtx.lineWidth = 5;
-        // canvasCtx.arc(startPos.x, startPos.y, 15, 0, 2 * Math.PI, false);
-        // canvasCtx.stroke();
 
     }
     else {
@@ -287,21 +274,6 @@ function drawGestureActiveStatus(canvasCtx, canvasElement) {
     canvasCtx.stroke();
 }
 
-// function updateOutputStatus() {
-//     let i = activeGestureId;
-//     if(i != null) {
-//         let elem = document.getElementById(`G${i}-OUT`);
-//         elem.innerHTML = `CC: ${gestureCCs[i]} | VALUE: ${gestureValues[i]}`;
-//         elem.classList.add("active");
-//     }
-//     else {
-//         gestureCCs.forEach((cc, index) => {
-//             let elem = document.getElementById(`G${index}-OUT`);
-//             elem.classList.remove("active");
-//         });
-//     }
-// }
-
 function drawOutputStatus(){
     let outputSection = document.getElementById("out");
     if(outputSection.children.length == 0){
@@ -316,15 +288,17 @@ function drawOutputStatus(){
         // update existing elements if they exist
         gestureCCs.forEach((cc, index) => {
             let current = outputSection.children[index];
+            current.innerText = `G${index+1} | CC: ${cc} | VAL: ${gestureValues[index]}`;
+
             if(index == activeGestureId){
                 current.classList.add("active");
-                current.innerText = `G${index+1} | CC: ${cc} | VAL: ${gestureValues[index]}`;
             }
             else if(index == detectedGestureId){
                 current.classList.add("detected");
             }
             else {
                 current.classList.remove("active");
+                current.classList.remove("detected");
             }
         });
     }
