@@ -5,7 +5,7 @@ const demosSection = document.getElementById("demos");
 let gestureRecognizer;
 let runningMode = "IMAGE";
 const videoHeight = "720px";
-const videoWidth = "1280px";
+const videoWidth = "960px";
 
 const video = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];

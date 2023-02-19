@@ -4,8 +4,8 @@ const { GestureRecognizer, FilesetResolver } = vision;
 const demosSection = document.getElementById("demos");
 let gestureRecognizer;
 let runningMode = "IMAGE";
-const videoHeight = "360px";
-const videoWidth = "480px";
+const videoHeight = "720px";
+const videoWidth = "960px";
 
 const video = document.getElementById("webcam");
 const canvasElement = document.getElementById("output_canvas");
