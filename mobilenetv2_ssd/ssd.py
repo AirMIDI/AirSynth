@@ -89,6 +89,8 @@ class SSD(nn.Module):
 
         if self.is_test:
             confidences = F.softmax(confidences, dim=2)
+            locations = locations.cuda()
+            locations.to("cuda:0")
             boxes = box_utils.convert_locations_to_boxes(
                 locations, self.priors, self.config.center_variance, self.config.size_variance
             )

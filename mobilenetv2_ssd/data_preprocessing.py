@@ -19,7 +19,7 @@ class TrainAugmentation:
             ToPercentCoords(),
             Resize(self.size),
             SubtractMeans(self.mean),
-            lambda img, boxes=None, labels=None: (img / std, boxes, labels),
+            ScaleByStd(std),
             ToTensor(),
         ])
 
@@ -32,6 +32,12 @@ class TrainAugmentation:
         """
         return self.augment(img, boxes, labels)
 
+class ScaleByStd:
+    def __init__(self, std):
+        self.std = std
+
+    def __call__(self, image, boxes=None, labels=None):
+        return image/self.std, boxes, labels
 
 class TestTransform:
     def __init__(self, size, mean=0.0, std=1.0):
@@ -39,7 +45,7 @@ class TestTransform:
             ToPercentCoords(),
             Resize(size),
             SubtractMeans(mean),
-            lambda img, boxes=None, labels=None: (img / std, boxes, labels),
+            ScaleByStd(std),
             ToTensor(),
         ])
 

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+
+<section id="demos" class="invisible">
+    <div id="liveView" class="videoView">
+        <div style="position: relative;">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas class="output_canvas" id="output_canvas" width="1280" height="720" style="position: absolute; left: 0px; top: 0px;"></canvas>
+            <p id='gesture_output' class="output">
+        </div>
+    </div>
+</section>
+
+<script type="module" src="gesture_mediapipe.js"></script>
+
+</html>

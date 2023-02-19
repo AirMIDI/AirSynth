@@ -5,7 +5,7 @@ import sys
 import itertools
 
 import torch
-from torch.utils.data import DataLoader, ConcatDataset
+from torch.utils.data import DataLoader, ConcatDataset, default_collate
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 
 from misc import str2bool, freeze_net_layers, store_labels
@@ -24,8 +24,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--dataset_type", default="ego", type=str,
                     help='Specify dataset type. Currently support ego.')
 
-parser.add_argument('--datasets', nargs='+', help='Dataset directory path')
-parser.add_argument('--validation_dataset', help='Dataset directory path')
+parser.add_argument('--datasets', default=["../data/egohands_kitti_formatted"], nargs='+', help='Dataset directory path')
+parser.add_argument('--validation_dataset', default="../data/egohands_kitti_formatted", help='Dataset directory path')
 parser.add_argument('--balance_data', action='store_true',
                     help="Balance training data by down-sampling more frequent labels.")
 
@@ -74,7 +74,7 @@ parser.add_argument('--t_max', default=120, type=float,
 # Train params
 parser.add_argument('--batch_size', default=32, type=int,
                     help='Batch size for training')
-parser.add_argument('--num_epochs', default=120, type=int,
+parser.add_argument('--num_epochs', default=500, type=int,
                     help='the number epochs')
 parser.add_argument('--num_workers', default=4, type=int,
                     help='Number of workers used in dataloading')
@@ -85,7 +85,7 @@ parser.add_argument('--debug_steps', default=100, type=int,
 parser.add_argument('--use_cuda', default=True, type=str2bool,
                     help='Use CUDA to train model')
 
-parser.add_argument('--checkpoint_folder', default='models/',
+parser.add_argument('--checkpoint_folder', default='log/02_17_3/',
                     help='Directory for saving checkpoint models')
 
 
@@ -159,6 +159,14 @@ def test(loader, net, criterion, device):
     return running_loss / num, running_regression_loss / num, running_classification_loss / num
 
 
+def my_collate(batch):
+    batch = list(filter(lambda x:x is not None, batch))
+    try:
+        return default_collate(batch)
+    except:
+        print(len(batch))
+
+
 if __name__ == '__main__':
     logging.info(args)
 
@@ -180,7 +188,7 @@ if __name__ == '__main__':
         if args.dataset_type == 'ego':
             dataset = EgoDataset(dataset_path, transform=train_transform,
                                  target_transform=target_transform)
-            label_file = os.path.join(args.checkpoint_folder, "voc-model-labels.txt")
+            label_file = os.path.join(args.checkpoint_folder, "ego-model-labels.txt")
             store_labels(label_file, dataset.class_names)
             num_classes = len(dataset.class_names)
         else:
@@ -191,7 +199,7 @@ if __name__ == '__main__':
     logging.info("Train dataset size: {}".format(len(train_dataset)))
     train_loader = DataLoader(train_dataset, args.batch_size,
                               num_workers=args.num_workers,
-                              shuffle=True)
+                              shuffle=True, collate_fn=my_collate)
 
     # VALIDATION DATASET
     logging.info("Prepare Validation datasets.")
@@ -202,7 +210,7 @@ if __name__ == '__main__':
 
     val_loader = DataLoader(val_dataset, args.batch_size,
                             num_workers=args.num_workers,
-                            shuffle=False)
+                            shuffle=False, collate_fn=my_collate)
 
     # CREATE NETWORK
     logging.info("Build network.")
@@ -285,8 +293,7 @@ if __name__ == '__main__':
     logging.info(f"Start training from epoch {last_epoch + 1}.")
     for epoch in range(last_epoch + 1, args.num_epochs):
         scheduler.step()
-        train(train_loader, net, criterion, optimizer,
-              device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
+        train(train_loader, net, criterion, optimizer, device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
 
         if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
@@ -296,6 +303,6 @@ if __name__ == '__main__':
                 f"Validation Regression Loss {val_regression_loss:.4f}, " +
                 f"Validation Classification Loss: {val_classification_loss:.4f}"
             )
-            model_path = os.path.join(args.checkpoint_folder, f"{args.net}-Epoch-{epoch}-Loss-{val_loss}.pth")
+            model_path = os.path.join(args.checkpoint_folder, f"mobilenet_v2_ssd-Epoch-{epoch}-Loss-{val_loss}.pth")
             net.save(model_path)
             logging.info(f"Saved model {model_path}")
