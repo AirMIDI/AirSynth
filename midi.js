@@ -35,46 +35,33 @@ export function processData(x, y, gestureName, canvasCtx, canvasElement) {
 
     let posX = x;
     let posY = y;
-    // let info = getPointVelocity(posX, posY);
-    // if (info.vx < -150 && info.distanceTraveled > 150) {
-    //     console.log("swiped right");
-    //     startGesture();
-    // }
-    // if (info.vx > 150 && info.distanceTraveled > 150) {
-    //     console.log("swiped left");
-    // }
 
+    // checkForGestureStartOrEnd(posX, posY);
+    // drawGestureDetectionStatus(canvasCtx, canvasElement);
 
-
-    checkForGestureStartOrEnd(posX, posY);
-    drawGestureDetectionStatus(canvasCtx, canvasElement);
-
-    let gestureId = 0;
-    switch (gestureName) {
-        case 'Open_Palm':
-            gestureId = 0;
-            break;
-        case 'Pointing_Up':
-            gestureId = 1;
-            break;
-        case 'Victory':
-            gestureId = 2;
-            break;
-        case 'Closed_Fist':
-            gestureId = 3;
-            break;
-        default:
-            gestureId = -1;
-            break;
-        // case 'Thumb_Down':
-        //     gestureId = 4;
-        //     break;
-        // case 'Thumb_Up':
-        //     gestureId = 5;
-        //     break;
-        // case 'ILoveYou':
-        //     gestureId = 7;
-        //     break;
+    let gestureId = -1;
+    if (gestureName == 'Closed_Fist') {
+        endGesture();
+    }
+    else {
+        startGesture();
+        switch (gestureName) {
+            case 'Open_Palm':
+                gestureId = 0;
+                break;
+            case 'Pointing_Up':
+                gestureId = 1;
+                break;
+            case 'Victory':
+                gestureId = 2;
+                break;
+            case 'ILoveYou':
+                gestureId = 3;
+                break;
+            default:
+                gestureId = -1;
+                break;
+        }
     }
     doSliderGestureIfActive(posX, posY, midiout, gestureId);
     drawOutputStatus();
@@ -136,6 +123,39 @@ function getPointVelocity(currX, currY) {
     return info;
 }
 
+
+// SWIPE FUNCTION, UNFINISHED
+const SWIPE_DIR = {
+    "LEFT": 0,
+    "RIGHT": 1,
+    "UP": 2,
+    "DOWN": 3
+}
+function checkForSwipe(posX, posY) {
+    const swipeThreshold = 100;
+    let info = getPointVelocity(posX, posY);
+    if (info.vx < -swipeThreshold) {
+        console.log("swiped right");
+        return SWIPE_DIR.RIGHT;
+    }
+    else if (info.vx > swipeThreshold) {
+        console.log("swiped left");
+        return SWIPE_DIR.LEFT;
+    }
+    else if (info.vy > swipeThreshold) {
+        console.log("swiped up");
+        return SWIPE_DIR.UP;
+    }
+    else if (info.vy < swipeThreshold) {
+        console.log("swiped down");
+        return SWIPE_DIR.DOWN;
+    }
+    else {
+        console.log("no swipe");
+        return false;
+    }
+}
+
 // the "slider" is defined between (startX,startY) and a radius around it
 // (posX,posY) is compared for closeness to the start, with a cutoff at radius
 function getCCValueRadial(posX, posY, startX, startY, radius) {
@@ -157,13 +177,16 @@ function getCCValueRadial(posX, posY, startX, startY, radius) {
 }
 
 // width = max x, height = max y
+// we will use 80% of the width and height, centered
 function getCCValueXYAxisMode(posX, posY, width, height, axis) {
     let position = 0;
     if (axis === "x") {
-        position = posX / width;
+        position = (posX - width*0.1) / (width * 0.8);
     }
     else {
-        position = posY / height;
+        // top of screen = 1
+        // bottom of screen = 0
+        position = 1 - (posY - height*0.1) / (height * 0.8);
     }
     return Math.min(Math.max(Math.round(position * 127), 0), 127);
 }
@@ -281,7 +304,9 @@ function doSliderGestureIfActive(x, y, midiout, gestureId) {
         let cc = gestureCCs[gestureId];
         gestureValues[activeGestureId] = ccx;
 
-        midiout.channels[1].sendControlChange(cc, ccx);
+        if(midiout){
+            midiout.channels[1].sendControlChange(cc, ccx);
+        }
     }
     else {
         activeGestureId = null;
