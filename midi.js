@@ -26,9 +26,14 @@ function onEnabled() {
     }
 }
 
+export function notifyOffScreen(){
+    endGesture();
+}
+
 // Convert gesture data into midi output
 // This function is called by gesture_mediapipe.js every frame
-export function processData(x, y, gestureName, canvasCtx, canvasElement) {
+let noteActive = false;
+export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
     let selectedPort = document.getElementById("ports").value;
     let midiout = WebMidi.outputs[selectedPort];
 
@@ -63,7 +68,40 @@ export function processData(x, y, gestureName, canvasCtx, canvasElement) {
                 break;
         }
     }
-    doSliderGestureIfActive(posX, posY, midiout, gestureId);
+    // doSliderGestureIfActive(posX, posY, midiout, gestureId);
+
+    // MPE test
+    if (isGestureActive()) {
+        if(!noteActive){
+            noteActive = true;
+            midiout.channels[2].sendNoteOn("C4");
+        }
+        else{
+            // send x, y, z info
+
+            // x == pitch bend
+            let ccx = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "x");
+            midiout.channels[2].sendPitchBend(ccx/127);
+            
+            // y == timbre / CC 74
+            let ccy = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "y");
+            midiout.channels[2].sendControlChange(74, ccy);
+
+            // z == aftertouch
+            // z ranges from about 15 to 115
+            // console.log(z);
+            let ccz = Math.max(Math.min((z - 15) / 115, 1.0), 0);
+            console.log(ccz);
+            midiout.channels[2].sendChannelAftertouch(ccz);
+        }
+    }
+    else {
+        if(noteActive){
+            noteActive = false;
+            midiout.channels[2].sendNoteOff("C4");
+        }
+    }
+
     drawOutputStatus();
 
     drawGestureActiveStatus(canvasCtx, canvasElement);
@@ -125,36 +163,36 @@ function getPointVelocity(currX, currY) {
 
 
 // SWIPE FUNCTION, UNFINISHED
-const SWIPE_DIR = {
-    "LEFT": 0,
-    "RIGHT": 1,
-    "UP": 2,
-    "DOWN": 3
-}
-function checkForSwipe(posX, posY) {
-    const swipeThreshold = 100;
-    let info = getPointVelocity(posX, posY);
-    if (info.vx < -swipeThreshold) {
-        console.log("swiped right");
-        return SWIPE_DIR.RIGHT;
-    }
-    else if (info.vx > swipeThreshold) {
-        console.log("swiped left");
-        return SWIPE_DIR.LEFT;
-    }
-    else if (info.vy > swipeThreshold) {
-        console.log("swiped up");
-        return SWIPE_DIR.UP;
-    }
-    else if (info.vy < swipeThreshold) {
-        console.log("swiped down");
-        return SWIPE_DIR.DOWN;
-    }
-    else {
-        console.log("no swipe");
-        return false;
-    }
-}
+// const SWIPE_DIR = {
+//     "LEFT": 0,
+//     "RIGHT": 1,
+//     "UP": 2,
+//     "DOWN": 3
+// }
+// function checkForSwipe(posX, posY) {
+//     const swipeThreshold = 100;
+//     let info = getPointVelocity(posX, posY);
+//     if (info.vx < -swipeThreshold) {
+//         console.log("swiped right");
+//         return SWIPE_DIR.RIGHT;
+//     }
+//     else if (info.vx > swipeThreshold) {
+//         console.log("swiped left");
+//         return SWIPE_DIR.LEFT;
+//     }
+//     else if (info.vy > swipeThreshold) {
+//         console.log("swiped up");
+//         return SWIPE_DIR.UP;
+//     }
+//     else if (info.vy < swipeThreshold) {
+//         console.log("swiped down");
+//         return SWIPE_DIR.DOWN;
+//     }
+//     else {
+//         console.log("no swipe");
+//         return false;
+//     }
+// }
 
 // the "slider" is defined between (startX,startY) and a radius around it
 // (posX,posY) is compared for closeness to the start, with a cutoff at radius
@@ -181,12 +219,12 @@ function getCCValueRadial(posX, posY, startX, startY, radius) {
 function getCCValueXYAxisMode(posX, posY, width, height, axis) {
     let position = 0;
     if (axis === "x") {
-        position = (posX - width*0.1) / (width * 0.8);
+        position = (posX - width * 0.1) / (width * 0.8);
     }
     else {
         // top of screen = 1
         // bottom of screen = 0
-        position = 1 - (posY - height*0.1) / (height * 0.8);
+        position = 1 - (posY - height * 0.1) / (height * 0.8);
     }
     return Math.min(Math.max(Math.round(position * 127), 0), 127);
 }
@@ -304,7 +342,7 @@ function doSliderGestureIfActive(x, y, midiout, gestureId) {
         let cc = gestureCCs[gestureId];
         gestureValues[activeGestureId] = ccx;
 
-        if(midiout){
+        if (midiout) {
             midiout.channels[1].sendControlChange(cc, ccx);
         }
     }

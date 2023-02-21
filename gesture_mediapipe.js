@@ -1,6 +1,6 @@
 "use strict"
 import vision from "https://cdn.skypack.dev/@mediapipe/tasks-vision@latest";
-import { processData } from "./midi.js";
+import { processData, notifyOffScreen } from "./midi.js";
 const { GestureRecognizer, FilesetResolver } = vision;
 
 // const demosSection = document.getElementById("demos");
@@ -62,6 +62,7 @@ async function predictWebcam() {
         let middlePos = results.landmarks[0][9];
         let x = middlePos.x * canvasElement.width;
         let y = middlePos.y * canvasElement.height;
+        let z = Math.abs(middlePos.z * 1000);
         // let gestureId = -1;
         let gestureName = 'None';
         if (results.gestures.length > 0) {
@@ -69,7 +70,7 @@ async function predictWebcam() {
         }
 
         // Pass all information down to midi.js for turning into outputs
-        processData(x, y, gestureName, canvasCtx, canvasElement);
+        processData(x, y, z, gestureName, canvasCtx, canvasElement);
 
         // draw hand
         canvasCtx.beginPath();
@@ -84,6 +85,9 @@ async function predictWebcam() {
             // });
             drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
         }
+    }
+    else {
+        notifyOffScreen();
     }
     canvasCtx.restore();
 
