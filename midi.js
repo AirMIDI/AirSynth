@@ -1,4 +1,5 @@
-// ----- midi stuff -----
+"use strict"
+
 // https://webmidijs.org/
 // Enable WEBMIDI.js and trigger the onEnabled() function when ready
 WebMidi
@@ -10,8 +11,8 @@ WebMidi
 function onEnabled() {
     // Display available MIDI output devices
     // and add to html dropdown
-    let dropdownElem = document.getElementById("outputs");
-    console.log("availiable outputs");
+    let dropdownElem = document.getElementById("ports");
+    console.log("availiable output ports");
     if (WebMidi.outputs.length < 1) {
         console.log("No device detected.");
     } else {
@@ -23,9 +24,64 @@ function onEnabled() {
             dropdownElem.appendChild(option);
         });
     }
-
-
 }
+
+// Convert gesture data into midi output
+// This function is called by gesture_mediapipe.js every frame
+export function processData(x, y, gestureName, canvasCtx, canvasElement) {
+    let selectedPort = document.getElementById("ports").value;
+    let midiout = WebMidi.outputs[selectedPort];
+
+
+    let posX = x;
+    let posY = y;
+    // let info = getPointVelocity(posX, posY);
+    // if (info.vx < -150 && info.distanceTraveled > 150) {
+    //     console.log("swiped right");
+    //     startGesture();
+    // }
+    // if (info.vx > 150 && info.distanceTraveled > 150) {
+    //     console.log("swiped left");
+    // }
+
+
+
+    checkForGestureStartOrEnd(posX, posY);
+    drawGestureDetectionStatus(canvasCtx, canvasElement);
+
+    let gestureId = 0;
+    switch (gestureName) {
+        case 'Open_Palm':
+            gestureId = 0;
+            break;
+        case 'Pointing_Up':
+            gestureId = 1;
+            break;
+        case 'Victory':
+            gestureId = 2;
+            break;
+        case 'Closed_Fist':
+            gestureId = 3;
+            break;
+        default:
+            gestureId = -1;
+            break;
+        // case 'Thumb_Down':
+        //     gestureId = 4;
+        //     break;
+        // case 'Thumb_Up':
+        //     gestureId = 5;
+        //     break;
+        // case 'ILoveYou':
+        //     gestureId = 7;
+        //     break;
+    }
+    doSliderGestureIfActive(posX, posY, midiout, gestureId);
+    drawOutputStatus();
+
+    drawGestureActiveStatus(canvasCtx, canvasElement);
+}
+
 
 function getDistance(x1, y1, x2, y2) {
     return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -153,29 +209,29 @@ function checkForGestureStartOrEnd(x, y) {
 
     }
     else { // check for gesture start
-        // if (checkTimeStart == null) {
-        //     checkTimeStart = Date.now();
-        //     checkX = x;
-        //     checkY = y;
-        // }
+        if (checkTimeStart == null) {
+            checkTimeStart = Date.now();
+            checkX = x;
+            checkY = y;
+        }
 
-        // if (getDistance(x, y, checkX, checkY) < stillnessTolerance) {
-        //     elapsedTimeSinceCheck = Date.now() - checkTimeStart;
-        //     if (elapsedTimeSinceCheck > gestureStartThreshold) {
-        //         // if xy position is about the same 
-        //         console.log("GESTURE START: finger didnt move for 1s");
-        //         gestureActive = true;
-        //         gestureStartTime = Date.now();
-        //         gestureStartX = x;
-        //         gestureStartY = y;
-        //         checkTimeStart = null;
-        //     }
-        // }
-        // // finger moved, reset 
-        // else {
-        //     console.log("START CHECK: finger moved, reset");
-        //     checkTimeStart = null;
-        // }
+        if (getDistance(x, y, checkX, checkY) < stillnessTolerance) {
+            elapsedTimeSinceCheck = Date.now() - checkTimeStart;
+            if (elapsedTimeSinceCheck > gestureStartThreshold) {
+                // if xy position is about the same 
+                console.log("GESTURE START: finger didnt move for 1s");
+                gestureActive = true;
+                gestureStartTime = Date.now();
+                gestureStartX = x;
+                gestureStartY = y;
+                checkTimeStart = null;
+            }
+        }
+        // finger moved, reset 
+        else {
+            console.log("START CHECK: finger moved, reset");
+            checkTimeStart = null;
+        }
     }
 
 }
@@ -208,20 +264,21 @@ function startGesture() {
 
 let detectedGestureId = null;
 let activeGestureId = null;
-let gestureCCs = [101,102,103,104,105];
-let gestureValues = [0,0,0,0,0];
+let gestureCCs = [101, 102, 103, 104, 105];
+let gestureValues = [0, 0, 0, 0, 0];
 
-function updateGestureCC(gestureId, cc){
+function updateGestureCC(gestureId, cc) {
     gestureCCs[gestureId] = Number(cc);
 }
 
 function doSliderGestureIfActive(x, y, midiout, gestureId) {
-    if (isGestureActive()) {
+    if (isGestureActive() && gestureId > -1) {
         // let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "x");
         let ccx = getCCValueXYAxisMode(x, y, 1280, 720, "y");
 
         activeGestureId = gestureId;
-        cc = gestureCCs[gestureId];
+        // console.log(gestureId, gestureCCs);
+        let cc = gestureCCs[gestureId];
         gestureValues[activeGestureId] = ccx;
 
         midiout.channels[1].sendControlChange(cc, ccx);
@@ -247,13 +304,13 @@ function drawGestureDetectionStatus(canvasCtx, canvasElement) {
     }
     else {
         // draw a progress circle until gesture start
-        // let checkPos = getGestureCheckPos();
-        // let proportionUntilGestureStart = getElapsedTime() / getGestureStartThreshold();
-        // canvasCtx.beginPath();
-        // canvasCtx.strokeStyle = '#00ff00';
-        // canvasCtx.lineWidth = 5;
-        // canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureStart * 2 * Math.PI, false);
-        // canvasCtx.stroke();
+        let checkPos = getGestureCheckPos();
+        let proportionUntilGestureStart = getElapsedTime() / getGestureStartThreshold();
+        canvasCtx.beginPath();
+        canvasCtx.strokeStyle = '#00ff00';
+        canvasCtx.lineWidth = 5;
+        canvasCtx.arc(checkPos.x, checkPos.y, 15, 0, proportionUntilGestureStart * 2 * Math.PI, false);
+        canvasCtx.stroke();
     }
 }
 
@@ -277,13 +334,13 @@ function drawGestureActiveStatus(canvasCtx, canvasElement) {
     canvasCtx.stroke();
 }
 
-function drawOutputStatus(){
+function drawOutputStatus() {
     let outputSection = document.getElementById("out");
-    if(outputSection.children.length == 0){
+    if (outputSection.children.length == 0) {
         // populate with elements if there are none
         gestureCCs.forEach((cc, index) => {
             let d = document.createElement("div");
-            d.innerText = `G${index+1} | CC: ${cc} | VAL: 0`;
+            d.innerText = `G${index + 1} | CC: ${cc} | VAL: 0`;
             outputSection.appendChild(d);
         });
     }
@@ -291,12 +348,12 @@ function drawOutputStatus(){
         // update existing elements if they exist
         gestureCCs.forEach((cc, index) => {
             let current = outputSection.children[index];
-            current.innerText = `G${index+1} | CC: ${cc} | VAL: ${gestureValues[index]}`;
+            current.innerText = `G${index + 1} | CC: ${cc} | VAL: ${gestureValues[index]}`;
 
-            if(index == activeGestureId){
+            if (index == activeGestureId) {
                 current.classList.add("active");
             }
-            else if(index == detectedGestureId){
+            else if (index == detectedGestureId) {
                 current.classList.add("detected");
             }
             else {

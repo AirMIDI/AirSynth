@@ -68,26 +68,18 @@ h1::after {
     /* background-color: var(--mint); */
     background-color: rgb(38, 194, 129) !important;
 }
-/* .inactive {
-} */
 .detected {
     background-color: rgb(255, 155, 60) !important;
 }
 
 #out > div {
-
     /*inactive by dfault*/
     background-color: rgb(243, 83, 83);
 }
 
-
-/* #console {
-    height: 10rem;
-    overflow: auto;
-    padding: 1rem;
-} */
-
 .container {
+    transform: scale(-1,1);
+    position: relative;
     margin: 1rem;
     max-width: 1280px;
     max-height: 720px;
@@ -97,9 +89,8 @@ h1::after {
 }
 
 .output_canvas {
-    height: 100%;
-}
-
-video {
-    display: none;
+    /* height: 100%; */
+    position: absolute;
+    left: 0;
+    top: 0;
 }
