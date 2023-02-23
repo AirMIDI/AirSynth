@@ -33,13 +33,15 @@ export function notifyOffScreen(){
 // Convert gesture data into midi output
 // This function is called by gesture_mediapipe.js every frame
 let noteActive = false;
+let playingNote = 0;
 export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
     let selectedPort = document.getElementById("ports").value;
     let midiout = WebMidi.outputs[selectedPort];
+    if(midiout == null) return;
 
 
-    let posX = x;
-    let posY = y;
+    // let posX = x;
+    // let posY = y;
 
     // checkForGestureStartOrEnd(posX, posY);
     // drawGestureDetectionStatus(canvasCtx, canvasElement);
@@ -47,9 +49,10 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
     let gestureId = -1;
     if (gestureName == 'Closed_Fist') {
         endGesture();
+        gestureId = -1;
     }
     else {
-        startGesture();
+        startGesture(x, y);
         switch (gestureName) {
             case 'Open_Palm':
                 gestureId = 0;
@@ -70,37 +73,113 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
     }
     // doSliderGestureIfActive(posX, posY, midiout, gestureId);
 
-    // MPE test
-    if (isGestureActive()) {
-        if(!noteActive){
-            noteActive = true;
-            midiout.channels[2].sendNoteOn("C4");
+
+    if(isGestureActive()){
+        // Note input mode when finger pointing up
+        if(gestureId == 1){
+            // console.log("notes mode");
+            let pos = getGestureStartPos();
+            let note = getRadialNote(x, y, pos.x, pos.y, 200, scaleCmaj7);
+
+            canvasCtx.beginPath();
+            canvasCtx.strokeStyle = 'orange';
+            canvasCtx.lineWidth = 5;
+            canvasCtx.arc(pos.x, pos.y, 200, 0, 2*Math.PI);
+            canvasCtx.arc(pos.x, pos.y, 200*0.3, 0, 2*Math.PI);
+            canvasCtx.stroke();
+
+            // One note plays at a time
+            if(note != playingNote){
+                midiout.channels[2].sendNoteOff(playingNote);
+                if(note > 0){
+                    midiout.channels[2].sendNoteOn(note);
+                }
+                playingNote = note;
+            }
         }
-        else{
+        // MPE mode when hand open
+        else if(gestureId == 0){
+            // endGesture(); // TODO create three states and not just two
+            // console.log("MPE mode");
+
             // send x, y, z info
-
-            // x == pitch bend
-            let ccx = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "x");
-            midiout.channels[2].sendPitchBend(ccx/127);
+            // x == pitch bend; between -1 and 1
+            // move left == bend down; move right == bend up
+            let startPos = getGestureStartPos();
+            let ccx = 0;
+            let bendRadius = 400;
+            if(x > startPos.x){ //left
+                ccx = Math.max(Math.min((x-startPos.x)/bendRadius, 1.0), 0.0);
+                // console.log(ccx);
+            }
+            else { //right
+                ccx = Math.max(Math.min((x-startPos.x)/(-bendRadius), 1.0), 0.0);
+                // console.log(ccx);
+            }
+            // let ccx = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "x");
+            midiout.channels[2].sendPitchBend(ccx);
             
-            // y == timbre / CC 74
-            let ccy = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "y");
-            midiout.channels[2].sendControlChange(74, ccy);
+            // y == timbre or CC 74; between 0-127
+            // let ccy = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "y");
+            // move up and down relative to starting position
+            let ccy = 63;
+            if(y > startPos.y){ //down
+                let change = Math.max(Math.min((y-startPos.y)/bendRadius, 1.0), 0.0);
+                ccy = 63 - change*63;
+            }
+            else { //up
+                let change = Math.max(Math.min((y-startPos.y)/(-bendRadius), 1.0), 0.0);
+                ccy = 63 + change*63;
+            }
+            midiout.channels[2].sendControlChange(74, Math.min(Math.max(Math.round(ccy), 0), 127));
 
-            // z == aftertouch
+            // z == aftertouch; between 0 and 1.0
             // z ranges from about 15 to 115
-            // console.log(z);
             let ccz = Math.max(Math.min((z - 15) / 115, 1.0), 0);
-            console.log(ccz);
             midiout.channels[2].sendChannelAftertouch(ccz);
         }
-    }
-    else {
-        if(noteActive){
-            noteActive = false;
-            midiout.channels[2].sendNoteOff("C4");
+        else {
+            console.log("dunno");
         }
     }
+    else if(gestureId == -1){
+        midiout.channels[2].sendNoteOff(playingNote);
+        // console.log("inactive");
+    }
+
+
+    // MPE mode when hand open
+
+
+
+    // MPE test
+    // if (isGestureActive()) {
+    //     if(!noteActive){
+    //         noteActive = true;
+    //         midiout.channels[2].sendNoteOn("C4");
+    //     }
+    //     else{
+    //         // send x, y, z info
+    //         // x == pitch bend
+    //         let ccx = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "x");
+    //         midiout.channels[2].sendPitchBend(ccx/127);
+            
+    //         // y == timbre / CC 74
+    //         let ccy = getCCValueXYAxisMode(x, y, canvasElement.width, canvasElement.height, "y");
+    //         midiout.channels[2].sendControlChange(74, ccy);
+
+    //         // z == aftertouch
+    //         // z ranges from about 15 to 115
+    //         let ccz = Math.max(Math.min((z - 15) / 115, 1.0), 0);
+    //         midiout.channels[2].sendChannelAftertouch(ccz);
+    //     }
+    // }
+    // else {
+    //     if(noteActive){
+    //         noteActive = false;
+    //         midiout.channels[2].sendNoteOff("C4");
+    //     }
+    // }
 
     drawOutputStatus();
 
@@ -319,8 +398,12 @@ function getGestureStartPos() {
 function endGesture() {
     gestureActive = false;
 }
-function startGesture() {
-    gestureActive = true;
+function startGesture(x, y) {
+    if(!gestureActive){
+        gestureStartX = x;
+        gestureStartY = y;
+        gestureActive = true;
+    }
 }
 
 let detectedGestureId = null;
