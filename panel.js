@@ -1,4 +1,5 @@
 let showVideo = true;
 document.querySelector('#videotoggle').addEventListener('change', () => {
-    showVideo = !showVideo;
+    // hide or unhide video element
+    document.getElementById('webcam').toggleAttribute('hidden');
 });

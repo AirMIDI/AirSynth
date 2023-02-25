@@ -24,7 +24,8 @@ body {
 
 .panel {
     box-sizing: border-box;
-    width: 300px;
+    width: 350px;
+    min-width: 250px;
     max-height: 720px;
     color: white;
     background-color: var(--gunmetal);
@@ -47,6 +48,11 @@ h1::after {
     margin: 0.5rem 0;
 }
 
+h2 {
+    font-size: 1rem;
+    margin: 0.5rem 0;
+}
+
 .options {
     display: flex;
     flex-direction: column;
@@ -58,7 +64,8 @@ h1::after {
     grid-template-columns: 1fr 2fr;
 }
 
-.outputs , #out {
+#out {
+    text-align: center;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -68,21 +75,23 @@ h1::after {
     /* background-color: var(--mint); */
     background-color: rgb(38, 194, 129) !important;
 }
-.detected {
+/* .detected {
     background-color: rgb(255, 155, 60) !important;
-}
+} */
 
-#out > div {
+/* #out > div { */
     /*inactive by dfault*/
-    background-color: rgb(243, 83, 83);
-}
+    /* background-color: rgb(243, 83, 83); */
+/* } */
 
 .container {
     transform: scale(-1,1);
     position: relative;
     margin: 1rem;
-    max-width: 1280px;
-    max-height: 720px;
+    /* max-width: 1280px; */
+    /* max-height: 720px; */
+    width: 960px;
+    height: 720px;
     background-color: var(--gunmetal);
     border-radius: 0.5rem;
     overflow: hidden;
@@ -93,4 +102,20 @@ h1::after {
     position: absolute;
     left: 0;
     top: 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.chvalues {
+    display: flex;
+    flex-direction: row;
+    column-gap: 0.5rem;
+}
+
+.channel {
+    border: 2px solid white;
+    border-radius: 2px;
+    padding: 0.2rem;
 }
