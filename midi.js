@@ -54,23 +54,23 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
     // drawGestureDetectionStatus(canvasCtx, canvasElement);
 
     let gestureId = -1;
-    if (gestureName == 'Closed_Fist') {
+    if (gestureName == 'Closed_Fist') { // STOP
         endGesture();
         gestureId = -1;
     }
     else {
         startGesture(x, y, z);
         switch (gestureName) {
-            case 'Open_Palm':
+            case 'Open_Palm': // modulate note
                 gestureId = 0;
                 break;
-            case 'Pointing_Up':
+            case 'Pointing_Up': // note input mode
                 gestureId = 1;
                 break;
-            case 'Victory':
+            case 'Victory': // custom CC
                 gestureId = 2;
                 break;
-            case 'ILoveYou':
+            case 'ILoveYou': // custom CC
                 gestureId = 3;
                 break;
             default:
@@ -78,7 +78,6 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
                 break;
         }
     }
-    // doSliderGestureIfActive(posX, posY, midiout, gestureId);
 
 
     if(isGestureActive()){
@@ -161,6 +160,16 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
             ccz = Math.max(Math.min(ccz, 1.0),0.0);
             midiout.channels[playingChannel].sendChannelAftertouch(ccz);
             updateOutputStatus(playingChannel, "at", ccz);
+        }
+        else if(gestureId == 2){
+            let cc = getCCValueXYAxisMode(x, y, 960, 720, "y");
+            midiout.channels[1].sendControlChange(102, cc);
+            updateOutputStatus(1, "custom1", cc);
+        }
+        else if(gestureId == 3){
+            let cc = getCCValueXYAxisMode(x, y, 960, 720, "y");
+            midiout.channels[1].sendControlChange(103, cc);
+            updateOutputStatus(1, "custom2", cc);
         }
         else {
             console.log("dunno");
@@ -586,6 +595,15 @@ function updateOutputStatus(channel, type, value){
             c = document.querySelector(`#ch-${channel}`);
             c.classList.add("active");
             break;
+        case "custom1":
+            element = document.querySelector('#cc102');
+            element.innerText = `CH 1 | CC 102 | VALUE: ${value}`;
+            element.classList.add("active");
+            break;
+        case "custom2":
+            element = document.querySelector('#cc103');
+            element.innerText = `CH 1 | CC 103 | VALUE: ${value}`;
+            element.classList.add("active");
+            break;
     }
-
 }

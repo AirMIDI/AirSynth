@@ -63,7 +63,7 @@ h2 {
     grid-template-columns: 1fr 2fr;
 }
 
-#out {
+#out, #cc-out {
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -102,8 +102,8 @@ h2 {
     column-gap: 0.5rem;
 }
 
-.channel {
+/* .channel {
     border: 2px solid white;
     border-radius: 2px;
     padding: 0.2rem;
-}
+} */
