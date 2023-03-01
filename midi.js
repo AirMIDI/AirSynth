@@ -44,6 +44,8 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
     if(selectedPort == -1) return;
 
     let midiout = WebMidi.outputs[selectedPort];
+    drawOutputStatus();
+
 
     // let posX = x;
     // let posY = y;
@@ -168,8 +170,6 @@ export function processData(x, y, z, gestureName, canvasCtx, canvasElement) {
         // midiout.channels[2].sendNoteOff(playingNote);
         midiout.sendAllNotesOff();
     }
-
-    drawOutputStatus();
 
     drawGestureActiveStatus(canvasCtx, canvasElement);
 }

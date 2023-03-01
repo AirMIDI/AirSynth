@@ -73,18 +73,20 @@ async function predictWebcam() {
         processData(x, y, z, gestureName, canvasCtx, canvasElement);
 
         // draw hand
-        canvasCtx.beginPath();
-        canvasCtx.strokeStyle = '#ff00ff';
-        canvasCtx.lineWidth = 5;
-        canvasCtx.arc(x, y, 15, 0, 2 * Math.PI, false);
-        canvasCtx.stroke();
         for (const landmarks of results.landmarks) {
-            // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-            //     color: "#00FF00",
-            //     lineWidth: 5
-            // });
-            drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                color: "#00FF0067",
+                lineWidth: 2
+            });
+            drawLandmarks(canvasCtx, landmarks, { color: "#00FF0037", lineWidth: 1 });
         }
+        canvasCtx.beginPath();
+        // canvasCtx.strokeStyle = '#ff00ff';
+        canvasCtx.fillStyle = '#ff00ff';
+        canvasCtx.lineWidth = 5;
+        canvasCtx.arc(x, y, 10, 0, 2 * Math.PI, false);
+        canvasCtx.fill();
+        // canvasCtx.stroke();
     }
     else {
         notifyOffScreen();
