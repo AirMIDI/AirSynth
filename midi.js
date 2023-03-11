@@ -196,16 +196,15 @@ const scaleCmaj7 = [60, 62, 64, 65, 67, 69, 71, 72];
 function getRadialNote(x, y, cx, cy, radius, safetyThreshold, scale) {
     let noteX = x - cx;
     let noteY = y - cy;
-    let radians = Math.atan2(noteY, noteX);
+    let radians = Math.atan2(noteY, noteX); //-PI to PI
+    let radiansNormalized = radians + Math.PI; //0 to 2PI
     let distance = getDistance(0, 0, noteX, noteY);
 
     if (distance > radius) return 0;
 
     // 30% of the radius in center is a safe area
     if (distance > radius * safetyThreshold) {
-        // TODO: channels numbered 2-9 depending on position
-        let radialPercent = (radians + Math.PI) / (2 * Math.PI);
-        let index = (Math.floor(radialPercent * 9)) % 8;
+        let index = Math.floor((radiansNormalized / (Math.PI/4)));
         let note = scale[index];
         return {note: note, channel: index + 2};
     } else {
@@ -217,13 +216,24 @@ function getRadialNote(x, y, cx, cy, radius, safetyThreshold, scale) {
 function drawRadialNotes(x, y, cx, cy, radius, safetyThreshold, canvasCtx){
     canvasCtx.beginPath();
     canvasCtx.strokeStyle = 'orange';
-    canvasCtx.lineWidth = 5;
+    canvasCtx.lineWidth = 3;
     canvasCtx.arc(cx, cy, radius, 0, 2*Math.PI);
     canvasCtx.stroke();
 
     canvasCtx.beginPath();
-    canvasCtx.arc(cx, cy, radius*safetyThreshold, 0, 2*Math.PI);
+    let innerRad = radius*safetyThreshold;
+    canvasCtx.arc(cx, cy, innerRad, 0, 2*Math.PI);
     canvasCtx.stroke();
+    
+    
+    for(let i=1;i<=8;i++){
+        let angle = (i * Math.PI/4);
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(cx+innerRad*Math.sin(angle), cy+innerRad*Math.cos(angle));
+        canvasCtx.lineTo(cx+radius*Math.sin(angle), cy+radius*Math.cos(angle));
+        canvasCtx.stroke();
+    }
+
 }
 
 // https://stackoverflow.com/a/19832744
