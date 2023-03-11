@@ -216,7 +216,7 @@ function getRadialNote(x, y, cx, cy, radius, safetyThreshold, scale) {
 function drawRadialNotes(x, y, cx, cy, radius, safetyThreshold, canvasCtx){
     canvasCtx.beginPath();
     canvasCtx.strokeStyle = 'orange';
-    canvasCtx.lineWidth = 3;
+    canvasCtx.lineWidth = 2;
     canvasCtx.arc(cx, cy, radius, 0, 2*Math.PI);
     canvasCtx.stroke();
 
